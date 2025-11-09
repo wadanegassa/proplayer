@@ -6,9 +6,7 @@ import 'providers/player_provider.dart';
 void main() {
   runApp(
     MultiProvider(
-      providers: [
-        ChangeNotifierProvider(create: (_) => PlayerProvider()),
-      ],
+      providers: [ChangeNotifierProvider(create: (_) => PlayerProvider())],
       child: const ProPlayer(),
     ),
   );
@@ -20,13 +18,9 @@ class ProPlayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'ProPlayer',
-      theme: ThemeData(
-        brightness: Brightness.dark,
-        primarySwatch: Colors.deepPurple,
-      ),
-      home: const MusicListScreen(),
       debugShowCheckedModeBanner: false,
+      title: 'ProPlayer',
+      home: const MusicListScreen(),
     );
   }
 }
