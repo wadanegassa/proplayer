@@ -1,50 +1,77 @@
-import 'package:permission_handler/permission_handler.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:io';
+import 'package:flutter/foundation.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class MediaService {
-  // Key name to remember permission status
-  static const String _permissionKey = 'permission_granted';
+  /// Request proper permissions for both Android 13+ and older versions.
+  Future<bool> requestPermission() async {
+    try {
+      // 👇 Add a short delay to ensure Flutter activity is ready before asking permission.
+      await Future.delayed(const Duration(milliseconds: 400));
 
-  // Ask for permission only if not granted before
-  Future<bool> requestPermissionOnce() async {
-    final prefs = await SharedPreferences.getInstance();
-    final savedStatus = prefs.getBool(_permissionKey) ?? false;
+      // 1️⃣ Try PhotoManager first (this internally handles Android 13+ media access)
+      final PermissionState result =
+          await PhotoManager.requestPermissionExtend();
+      if (result.isAuth) return true;
 
-    // If already saved as granted, skip asking
-    if (savedStatus) {
-      return true;
-    }
+      // 2️⃣ If not granted, fallback using permission_handler
+      if (Platform.isAndroid) {
+        final Map<Permission, PermissionStatus> statuses = await [
+          Permission.videos, // READ_MEDIA_VIDEO
+          Permission.audio, // READ_MEDIA_AUDIO
+          Permission.photos, // READ_MEDIA_IMAGES
+          Permission.storage, // Fallback for older Android versions
+        ].request();
 
-    // Check system permission
-    final status = await Permission.storage.request();
+        // Return true only if all granted
+        return statuses.values.any((status) => status.isGranted);
+      }
 
-    if (status.isGranted) {
-      // Save the success so we never ask again
-      await prefs.setBool(_permissionKey, true);
-      return true;
-    } else {
-      // Save false just in case (optional)
-      await prefs.setBool(_permissionKey, false);
+      // 3️⃣ For iOS — PhotoManager already handles permissions
+      return result.isAuth;
+    } catch (e) {
+      // Catch null Activity or Permission errors
+      debugPrint("⚠️ Permission request failed: $e");
       return false;
     }
   }
 
-  // Load all media (music/video) after permission granted
+  /// Load audio or video files from the device
   Future<List<AssetEntity>> loadMedia({bool videos = false}) async {
-    final hasPermission = await requestPermissionOnce();
-
+    final hasPermission = await requestPermission();
     if (!hasPermission) {
       throw Exception('Permission not granted');
     }
 
+    // 4️⃣ Fetch media paths based on type
     final List<AssetPathEntity> paths = await PhotoManager.getAssetPathList(
       type: videos ? RequestType.video : RequestType.audio,
+      filterOption: FilterOptionGroup(
+        videoOption: videos
+            ? FilterOption(
+                durationConstraint: DurationConstraint(
+                  min: Duration.zero,
+                  max: const Duration(hours: 24),
+                ),
+              )
+            : FilterOption(),
+        audioOption: !videos
+            ? FilterOption(
+                durationConstraint: DurationConstraint(
+                  min: Duration.zero,
+                  max: const Duration(hours: 24),
+                ),
+              )
+            : FilterOption(),
+      ),
     );
 
     final List<AssetEntity> mediaFiles = [];
+
+    // 5️⃣ Get files from each path
     for (final path in paths) {
-      final List<AssetEntity> files = await path.getAssetListPaged(page: 0, size: 100);
+      final files = await path.getAssetListPaged(page: 0, size: 200);
       mediaFiles.addAll(files);
     }
 

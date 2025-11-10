@@ -13,49 +13,65 @@ class PlayMusicScreen extends StatefulWidget {
 }
 
 class _PlayMusicScreenState extends State<PlayMusicScreen> {
-  bool isPlaying = true;
   double progress = 0.0;
-  late StreamSubscription _positionSub;
+  bool isPlaying = true;
+  late StreamSubscription<Duration> _positionSub;
+  late StreamSubscription<PlayerState> _playerStateSub;
 
   @override
   void initState() {
     super.initState();
 
-    // Update progress bar
+    // Listen to position updates to update the slider
     _positionSub = widget.audioService.player.positionStream.listen((pos) {
-      final duration = widget.audioService.player.duration?.inMilliseconds ?? 1;
+      final duration =
+          widget.audioService.player.duration ?? Duration(seconds: 1);
       setState(() {
-        progress = (pos.inMilliseconds / duration).clamp(0.0, 1.0);
+        progress = (pos.inMilliseconds / duration.inMilliseconds).clamp(
+          0.0,
+          1.0,
+        );
       });
     });
 
-    // Auto-play next song when current ends
-    widget.audioService.player.playerStateStream.listen((state) {
+    // Listen to player state (to auto play next song when finished)
+    _playerStateSub = widget.audioService.player.playerStateStream.listen((
+      state,
+    ) {
+      setState(() {
+        isPlaying = widget.audioService.player.playing;
+      });
+
       if (state.processingState == ProcessingState.completed) {
         widget.audioService.nextSong();
       }
     });
   }
 
-  Future<void> _togglePlay() async {
+  @override
+  void dispose() {
+    _positionSub.cancel();
+    _playerStateSub.cancel();
+    super.dispose();
+  }
+
+  Future<void> _togglePlayPause() async {
     await widget.audioService.togglePlayPause();
-    setState(() => isPlaying = widget.audioService.player.playing);
   }
 
   Future<void> _nextSong() async => await widget.audioService.nextSong();
   Future<void> _prevSong() async => await widget.audioService.previousSong();
 
-  @override
-  void dispose() {
-    _positionSub.cancel();
-    super.dispose();
+  String _formatDuration(Duration duration) {
+    final minutes = duration.inMinutes;
+    final seconds = duration.inSeconds % 60;
+    return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 
   @override
   Widget build(BuildContext context) {
     final song = widget.audioService.currentSong;
     if (song == null) return const SizedBox();
-    final songTitle = song.title ?? 'Unknown Song';
 
     return DraggableScrollableSheet(
       expand: false,
@@ -73,7 +89,7 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
         ),
         child: Column(
           children: [
-            // drag handle
+            // Drag handle
             Container(
               width: 50,
               height: 5,
@@ -86,7 +102,7 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
 
             const SizedBox(height: 15),
 
-            // Music art / icon
+            // Music artwork placeholder
             Container(
               height: 250,
               width: 250,
@@ -107,9 +123,9 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
 
             const SizedBox(height: 25),
 
-            // Song title & artist
+            // Song title
             Text(
-              songTitle,
+              song.title ?? 'Unknown Song',
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 22,
@@ -126,7 +142,7 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
 
             const SizedBox(height: 20),
 
-            // Progress Bar
+            // Progress slider
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 25.0),
               child: Column(
@@ -135,6 +151,8 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
                     value: progress,
                     min: 0,
                     max: 1,
+                    activeColor: Colors.deepPurpleAccent,
+                    inactiveColor: Colors.white24,
                     onChanged: (value) async {
                       final duration = widget.audioService.player.duration;
                       if (duration != null) {
@@ -142,8 +160,6 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
                         await widget.audioService.player.seek(newPos);
                       }
                     },
-                    activeColor: Colors.deepPurpleAccent,
-                    inactiveColor: Colors.white24,
                   ),
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -153,7 +169,9 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
                         style: const TextStyle(color: Colors.white70),
                       ),
                       Text(
-                        _formatDuration(widget.audioService.player.duration ?? Duration.zero),
+                        _formatDuration(
+                          widget.audioService.player.duration ?? Duration.zero,
+                        ),
                         style: const TextStyle(color: Colors.white70),
                       ),
                     ],
@@ -164,24 +182,28 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
 
             const SizedBox(height: 15),
 
-            // Control Buttons
+            // Control buttons
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.skip_previous_rounded, color: Colors.white, size: 40),
+                  icon: const Icon(
+                    Icons.skip_previous_rounded,
+                    color: Colors.white,
+                    size: 40,
+                  ),
                   onPressed: _prevSong,
                 ),
                 const SizedBox(width: 15),
                 GestureDetector(
-                  onTap: _togglePlay,
+                  onTap: _togglePlayPause,
                   child: Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.deepPurpleAccent.withOpacity(0.9),
+                      color: Colors.deepPurpleAccent.withValues(alpha: 0.9),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.deepPurpleAccent.withOpacity(0.6),
+                          color: Colors.deepPurpleAccent.withValues(alpha: 0.6),
                           blurRadius: 15,
                           spreadRadius: 3,
                         ),
@@ -189,7 +211,9 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
                     ),
                     padding: const EdgeInsets.all(16),
                     child: Icon(
-                      isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                      isPlaying
+                          ? Icons.pause_rounded
+                          : Icons.play_arrow_rounded,
                       color: Colors.white,
                       size: 50,
                     ),
@@ -197,7 +221,11 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
                 ),
                 const SizedBox(width: 15),
                 IconButton(
-                  icon: const Icon(Icons.skip_next_rounded, color: Colors.white, size: 40),
+                  icon: const Icon(
+                    Icons.skip_next_rounded,
+                    color: Colors.white,
+                    size: 40,
+                  ),
                   onPressed: _nextSong,
                 ),
               ],
@@ -205,7 +233,7 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
 
             const SizedBox(height: 20),
 
-            // Bottom buttons (repeat, shuffle, favorite)
+            // Bottom row
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: const [
@@ -221,11 +249,5 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
         ),
       ),
     );
-  }
-
-  String _formatDuration(Duration duration) {
-    final minutes = duration.inMinutes;
-    final seconds = duration.inSeconds % 60;
-    return '$minutes:${seconds.toString().padLeft(2, '0')}';
   }
 }

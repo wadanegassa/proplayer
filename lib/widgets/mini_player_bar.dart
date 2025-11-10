@@ -5,11 +5,7 @@ class MiniPlayer extends StatelessWidget {
   final AudioPlayerService audioService;
   final VoidCallback onTap;
 
-  const MiniPlayer({
-    super.key,
-    required this.audioService,
-    required this.onTap,
-  });
+  const MiniPlayer({super.key, required this.audioService, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -26,11 +22,7 @@ class MiniPlayer extends StatelessWidget {
             const Icon(Icons.music_note, color: Colors.white),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                song.title ?? 'Unknown',
-                style: const TextStyle(color: Colors.white),
-                overflow: TextOverflow.ellipsis,
-              ),
+              child: Text(song.title ?? 'Unknown', style: const TextStyle(color: Colors.white), overflow: TextOverflow.ellipsis),
             ),
             StreamBuilder<bool>(
               stream: audioService.player.playingStream,
@@ -38,11 +30,7 @@ class MiniPlayer extends StatelessWidget {
                 final isPlaying = snapshot.data ?? true;
                 return IconButton(
                   onPressed: () => audioService.togglePlayPause(),
-                  icon: Icon(
-                    isPlaying ? Icons.pause_circle : Icons.play_circle,
-                    color: Colors.white,
-                    size: 32,
-                  ),
+                  icon: Icon(isPlaying ? Icons.pause_circle : Icons.play_circle, color: Colors.white, size: 32),
                 );
               },
             ),

@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:photo_manager/photo_manager.dart';
-import 'package:proplayer/screens/player_screen.dart';
-import 'package:proplayer/widgets/mini_player_bar.dart';
-import '../services/media_service.dart';
 import '../services/audio_player_service.dart';
+import '../services/media_service.dart';
+import '../widgets/mini_player_bar.dart';
+import 'player_screen.dart';
+import 'video_list_screen.dart';
+import 'package:photo_manager/photo_manager.dart';
+
 class MusicListScreen extends StatefulWidget {
   const MusicListScreen({super.key});
 
@@ -18,6 +20,7 @@ class _MusicListScreenState extends State<MusicListScreen> {
   List<AssetEntity> _songs = [];
   bool _isLoading = true;
   bool _isMiniPlayerVisible = false;
+  int _currentIndex = 0;
 
   @override
   void initState() {
@@ -43,7 +46,7 @@ class _MusicListScreenState extends State<MusicListScreen> {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => PlayMusicScreen(audioService: _audioService),
+      builder: (_) => PlayMusicScreen(audioService: _audioService),
     );
   }
 
@@ -55,115 +58,198 @@ class _MusicListScreenState extends State<MusicListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Pass callbacks to VideoListScreen
+    final List<Widget> screens = [
+      _buildMusicList(),
+      VideoListScreen(
+        onVideoOpen: () => setState(() => _isMiniPlayerVisible = false),
+        onVideoClose: () => setState(() => _isMiniPlayerVisible = true),
+      ),
+    ];
+
     return Scaffold(
       extendBody: true,
       backgroundColor: const Color(0xFF0D0122),
       appBar: AppBar(
-        title: const Text('🎶 Music Library'),
-        backgroundColor: Colors.deepPurple.shade800,
+        title: Text(_currentIndex == 0 ? 'Music Library' : 'Video Library'),
+        backgroundColor: const Color.fromARGB(255, 5, 0, 20),
         elevation: 0,
-        centerTitle: true,
+        actions: [IconButton(icon: const Icon(Icons.search), onPressed: () {})],
       ),
       body: Stack(
         children: [
-          // Gradient background
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                colors: [Color(0xFF1E053A), Color(0xFF0D0122)],
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-              ),
-            ),
-          ),
-
-          // Song List
-          _isLoading
-              ? const Center(child: CircularProgressIndicator(color: Colors.deepPurpleAccent))
-              : ListView.builder(
-                  padding: const EdgeInsets.only(bottom: 120),
-                  itemCount: _songs.length,
-                  itemBuilder: (context, index) {
-                    final song = _songs[index];
-                    final isPlaying = _audioService.currentSong == song;
-
-                    return InkWell(
-                      onTap: () => _onSongTap(index),
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                        padding: const EdgeInsets.all(12),
-                        decoration: BoxDecoration(
-                          gradient: isPlaying
-                              ? LinearGradient(
-                                  colors: [Colors.deepPurpleAccent.shade200, Colors.deepPurple.shade900],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                )
-                              : LinearGradient(
-                                  colors: [Colors.deepPurple.shade900.withOpacity(0.4), Colors.deepPurple.shade800.withOpacity(0.4)],
-                                  begin: Alignment.topLeft,
-                                  end: Alignment.bottomRight,
-                                ),
-                          borderRadius: BorderRadius.circular(16),
-                          boxShadow: isPlaying
-                              ? [
-                                  BoxShadow(
-                                    color: Colors.deepPurpleAccent.withOpacity(0.4),
-                                    blurRadius: 10,
-                                    spreadRadius: 2,
-                                  )
-                                ]
-                              : [],
-                        ),
-                        child: Row(
-                          children: [
-                            Container(
-                              height: 50,
-                              width: 50,
-                              decoration: BoxDecoration(
-                                color: Colors.deepPurpleAccent,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: const Icon(Icons.music_note, color: Colors.white),
-                            ),
-                            const SizedBox(width: 16),
-                            Expanded(
-                              child: Text(
-                                song.title ?? 'Unknown Song',
-                                style: const TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                                overflow: TextOverflow.ellipsis,
-                              ),
-                            ),
-                            Icon(
-                              isPlaying && _audioService.player.playing
-                                  ? Icons.equalizer
-                                  : Icons.play_arrow,
-                              color: Colors.white,
-                            ),
-                          ],
-                        ),
-                      ),
-                    );
-                  },
-                ),
-
-          // Mini Player
+          IndexedStack(index: _currentIndex, children: screens),
           AnimatedPositioned(
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
-            bottom: _isMiniPlayerVisible ? 0 : -120,
-            left: 0,
-            right: 0,
+            bottom: _isMiniPlayerVisible ? 60 : -120,
+            left: 5,
+            right: 5,
             child: MiniPlayer(
               audioService: _audioService,
               onTap: _openFullPlayer,
             ),
           ),
         ],
+      ),
+      bottomNavigationBar: _buildBottomNav(),
+    );
+  }
+
+  Widget _buildMusicList() {
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          colors: [Color.fromARGB(255, 0, 0, 0), Color(0xFF0D0122)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+        ),
+      ),
+      child: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(
+                color: Color.fromARGB(255, 69, 0, 0),
+              ),
+            )
+          : ListView.builder(
+              padding: const EdgeInsets.only(bottom: 120),
+              itemCount: _songs.length,
+              itemBuilder: (context, index) {
+                final song = _songs[index];
+                final isPlaying =
+                    _audioService.currentSong == song &&
+                    _audioService.player.playing;
+
+                return InkWell(
+                  onTap: () => _onSongTap(index),
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      gradient: isPlaying
+                          ? const LinearGradient(
+                              colors: [
+                                Color.fromARGB(255, 117, 1, 1),
+                                Color.fromARGB(255, 24, 0, 4),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            )
+                          : LinearGradient(
+                              colors: [
+                                const Color.fromARGB(
+                                  255,
+                                  35,
+                                  0,
+                                  0,
+                                ).withValues(alpha: 0.4),
+                                const Color.fromARGB(
+                                  255,
+                                  50,
+                                  0,
+                                  0,
+                                ).withValues(alpha: 0.4),
+                              ],
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight,
+                            ),
+                      borderRadius: BorderRadius.circular(16),
+                      boxShadow: isPlaying
+                          ? [
+                              BoxShadow(
+                                color: const Color.fromARGB(
+                                  255,
+                                  255,
+                                  77,
+                                  77,
+                                ).withValues(alpha: 0.4),
+                                blurRadius: 10,
+                                spreadRadius: 2,
+                              ),
+                            ]
+                          : [],
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          height: 50,
+                          width: 50,
+                          decoration: BoxDecoration(
+                            color: const Color.fromARGB(255, 155, 0, 0),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: const Icon(
+                            Icons.music_note,
+                            color: Colors.white,
+                          ),
+                        ),
+                        const SizedBox(width: 16),
+                        Expanded(
+                          child: Text(
+                            song.title ?? 'Unknown Song',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                            ),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        Icon(
+                          isPlaying ? Icons.equalizer : Icons.play_arrow,
+                          color: Colors.white,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+    );
+  }
+
+  Widget _buildBottomNav() {
+    return Container(
+      decoration: BoxDecoration(
+        color: const Color.fromARGB(255, 14, 0, 39),
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color.fromARGB(80, 255, 99, 99),
+            blurRadius: 10,
+            offset: Offset(0, -3),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(20),
+          topRight: Radius.circular(20),
+        ),
+        child: BottomNavigationBar(
+          backgroundColor: const Color.fromARGB(255, 13, 1, 26),
+          selectedItemColor: const Color.fromARGB(255, 255, 99, 99),
+          unselectedItemColor: Colors.white70,
+          currentIndex: _currentIndex,
+          onTap: (index) => setState(() => _currentIndex = index),
+          type: BottomNavigationBarType.fixed,
+          items: const [
+            BottomNavigationBarItem(
+              icon: Icon(Icons.music_note),
+              label: 'Music',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.video_library),
+              label: 'Videos',
+            ),
+          ],
+        ),
       ),
     );
   }
