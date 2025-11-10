@@ -81,7 +81,7 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
       builder: (_, controller) => Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF3E0A70), Color(0xFF180041)],
+            colors: [Color.fromARGB(255, 122, 0, 0), Color(0xFF180041)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -109,7 +109,10 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(20),
                 gradient: const LinearGradient(
-                  colors: [Color(0xFF7C4DFF), Color(0xFF9575CD)],
+                  colors: [
+                    Color.fromARGB(255, 8, 0, 0),
+                    Color.fromARGB(255, 101, 1, 1),
+                  ],
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                 ),
@@ -151,7 +154,7 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
                     value: progress,
                     min: 0,
                     max: 1,
-                    activeColor: Colors.deepPurpleAccent,
+                    activeColor: const Color.fromARGB(255, 98, 0, 0),
                     inactiveColor: Colors.white24,
                     onChanged: (value) async {
                       final duration = widget.audioService.player.duration;
@@ -200,10 +203,20 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
                   child: Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: Colors.deepPurpleAccent.withValues(alpha: 0.9),
+                      color: const Color.fromARGB(
+                        255,
+                        88,
+                        1,
+                        1,
+                      ).withValues(alpha: 0.9),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.deepPurpleAccent.withValues(alpha: 0.6),
+                          color: const Color.fromARGB(
+                            255,
+                            252,
+                            75,
+                            75,
+                          ).withValues(alpha: 0.6),
                           blurRadius: 15,
                           spreadRadius: 3,
                         ),

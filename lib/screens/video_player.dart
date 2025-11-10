@@ -42,6 +42,11 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         backgroundColor: Colors.grey.shade700,
         bufferedColor: Colors.grey.shade500,
       ),
+      placeholder: Container(
+        color: Colors.black,
+      ),
+      // Make video fill the width in all orientations
+      aspectRatio: _controller!.value.aspectRatio,
     );
 
     setState(() => _isLoading = false);
@@ -61,15 +66,39 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       appBar: AppBar(
         title: Text(widget.video.title ?? 'Video'),
         backgroundColor: Colors.black,
+        elevation: 0,
       ),
-      body: Center(
-        child: _isLoading
-            ? const CircularProgressIndicator(color: Colors.redAccent)
-            : AspectRatio(
-                aspectRatio: _controller!.value.aspectRatio,
-                child: Chewie(controller: _chewieController!),
-              ),
-      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator(color: Colors.redAccent))
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                final screenWidth = constraints.maxWidth;
+                final videoHeight =
+                    screenWidth / (_controller!.value.aspectRatio); // maintain aspect ratio
+
+                return Center(
+                  child: Container(
+                    width: screenWidth,
+                    height: videoHeight,
+                    decoration: BoxDecoration(
+                      color: Colors.black,
+                      borderRadius: MediaQuery.of(context).orientation == Orientation.portrait
+                          ? BorderRadius.circular(16)
+                          : BorderRadius.zero,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.6),
+                          blurRadius: 12,
+                          offset: const Offset(0, 6),
+                        ),
+                      ],
+                    ),
+                    clipBehavior: Clip.hardEdge,
+                    child: Chewie(controller: _chewieController!),
+                  ),
+                );
+              },
+            ),
     );
   }
 }

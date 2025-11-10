@@ -19,8 +19,8 @@ class _MusicListScreenState extends State<MusicListScreen> {
 
   List<AssetEntity> _songs = [];
   bool _isLoading = true;
-  bool _isMiniPlayerVisible = false;
   int _currentIndex = 0;
+  bool _hideMiniPlayer = false;
 
   @override
   void initState() {
@@ -38,7 +38,7 @@ class _MusicListScreenState extends State<MusicListScreen> {
 
   Future<void> _onSongTap(int index) async {
     await _audioService.setPlaylist(_songs, startIndex: index);
-    setState(() => _isMiniPlayerVisible = true);
+    setState(() {}); // rebuild to show mini player
   }
 
   void _openFullPlayer() {
@@ -58,14 +58,16 @@ class _MusicListScreenState extends State<MusicListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Pass callbacks to VideoListScreen
     final List<Widget> screens = [
       _buildMusicList(),
       VideoListScreen(
-        onVideoOpen: () => setState(() => _isMiniPlayerVisible = false),
-        onVideoClose: () => setState(() => _isMiniPlayerVisible = true),
+        onVideoOpen: () => setState(() => _hideMiniPlayer = true),
+        onVideoClose: () => setState(() => _hideMiniPlayer = false),
       ),
     ];
+
+    final showMiniPlayer =
+        !_hideMiniPlayer && _audioService.currentSong != null;
 
     return Scaffold(
       extendBody: true,
@@ -79,17 +81,16 @@ class _MusicListScreenState extends State<MusicListScreen> {
       body: Stack(
         children: [
           IndexedStack(index: _currentIndex, children: screens),
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 300),
-            curve: Curves.easeInOut,
-            bottom: _isMiniPlayerVisible ? 60 : -120,
-            left: 5,
-            right: 5,
-            child: MiniPlayer(
-              audioService: _audioService,
-              onTap: _openFullPlayer,
+          if (showMiniPlayer)
+            Positioned(
+              bottom: 60,
+              left: 5,
+              right: 5,
+              child: MiniPlayer(
+                audioService: _audioService,
+                onTap: _openFullPlayer,
+              ),
             ),
-          ),
         ],
       ),
       bottomNavigationBar: _buildBottomNav(),
@@ -140,18 +141,8 @@ class _MusicListScreenState extends State<MusicListScreen> {
                             )
                           : LinearGradient(
                               colors: [
-                                const Color.fromARGB(
-                                  255,
-                                  35,
-                                  0,
-                                  0,
-                                ).withValues(alpha: 0.4),
-                                const Color.fromARGB(
-                                  255,
-                                  50,
-                                  0,
-                                  0,
-                                ).withValues(alpha: 0.4),
+                                Color.fromARGB(255, 35, 0, 0).withOpacity(0.4),
+                                Color.fromARGB(255, 50, 0, 0).withOpacity(0.4),
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -165,7 +156,7 @@ class _MusicListScreenState extends State<MusicListScreen> {
                                   255,
                                   77,
                                   77,
-                                ).withValues(alpha: 0.4),
+                                ).withOpacity(0.4),
                                 blurRadius: 10,
                                 spreadRadius: 2,
                               ),
@@ -237,7 +228,20 @@ class _MusicListScreenState extends State<MusicListScreen> {
           selectedItemColor: const Color.fromARGB(255, 255, 99, 99),
           unselectedItemColor: Colors.white70,
           currentIndex: _currentIndex,
-          onTap: (index) => setState(() => _currentIndex = index),
+          onTap: (index) {
+            setState(() {
+              _currentIndex = index;
+              if (_currentIndex == 1) {
+                // Video tab clicked: hide mini player and pause music
+                _hideMiniPlayer = true;
+                _audioService.player.pause();
+              } else {
+                // Music tab clicked: show mini player and optionally resume
+                _hideMiniPlayer = false;
+                _audioService.player.play();
+              }
+            });
+          },
           type: BottomNavigationBarType.fixed,
           items: const [
             BottomNavigationBarItem(
