@@ -1,16 +1,33 @@
-# proplayer
+### ProPlay – Local Media Player App ###
 
-A new Flutter project.
+ProPlay is a modern Flutter-based local media player for Android that lets you browse and play audio and video files from your device with a sleek, user-friendly interface.
 
-## Getting Started
+### Features
 
-This project is a starting point for a Flutter application.
+🎵 Play local audio files
 
-A few resources to get you started if this is your first Flutter project:
+🎬 Play local video files
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+🖤 Mini player for quick access
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+⏯ Play, pause, skip forward/backward
+
+📱 Bottom navigation for switching between music and videos
+
+✅ Handles storage/media permissions automatically
+
+🎨 Modern gradient UI with custom controls
+
+### Screenshots:
+
+### Music Library
+![Music List](assets/screenshots/music_library.png)
+
+### Video Library
+![Video List](assets/screenshots/video_library.png)
+
+### Music Player
+![Mini Player](assets/screenshots/player_screen.png)
+
+### Video Player
+![Mini Player](assets/screenshots/video_player.png)
