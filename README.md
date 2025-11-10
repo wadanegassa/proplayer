@@ -26,22 +26,18 @@ ProPlay is a modern Flutter-based local media player for Android that lets you b
 
   <figure style="margin:0;">
     <img src="assets/screenshots/music_library.png" width="200" />
-    <figcaption style="text-align:center;">Music List</figcaption>
   </figure>
 
   <figure style="margin:0;">
     <img src="assets/screenshots/video_library.png" width="200" />
-    <figcaption style="text-align:center;">Video List</figcaption>
   </figure>
 
   <figure style="margin:0;">
     <img src="assets/screenshots/player_screen.png" width="200" />
-    <figcaption style="text-align:center;">Music Player</figcaption>
   </figure>
 
   <figure style="margin:0;">
     <img src="assets/screenshots/video_player.png" width="200" />
-    <figcaption style="text-align:center;">Video Player</figcaption>
   </figure>
 
 </div>
