@@ -141,8 +141,8 @@ class _MusicListScreenState extends State<MusicListScreen> {
                             )
                           : LinearGradient(
                               colors: [
-                                Color.fromARGB(255, 35, 0, 0).withOpacity(0.4),
-                                Color.fromARGB(255, 50, 0, 0).withOpacity(0.4),
+                                Color.fromARGB(255, 35, 0, 0).withValues(alpha: 0.4),
+                                Color.fromARGB(255, 50, 0, 0).withValues(alpha: 0.4),
                               ],
                               begin: Alignment.topLeft,
                               end: Alignment.bottomRight,
@@ -151,12 +151,7 @@ class _MusicListScreenState extends State<MusicListScreen> {
                       boxShadow: isPlaying
                           ? [
                               BoxShadow(
-                                color: const Color.fromARGB(
-                                  255,
-                                  255,
-                                  77,
-                                  77,
-                                ).withOpacity(0.4),
+                                color: const Color.fromARGB(255, 255, 77, 77).withValues(alpha: 0.4),
                                 blurRadius: 10,
                                 spreadRadius: 2,
                               ),
@@ -169,12 +164,12 @@ class _MusicListScreenState extends State<MusicListScreen> {
                           height: 50,
                           width: 50,
                           decoration: BoxDecoration(
-                            color: const Color.fromARGB(255, 155, 0, 0),
-                            borderRadius: BorderRadius.circular(12),
+                            color: Colors.white.withValues(alpha: 0.1),
+                            borderRadius: BorderRadius.circular(8),
                           ),
-                          child: const Icon(
+                          child: Icon(
                             Icons.music_note,
-                            color: Colors.white,
+                            color: Colors.white.withValues(alpha: 0.5),
                           ),
                         ),
                         const SizedBox(width: 16),

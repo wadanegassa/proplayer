@@ -87,7 +87,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                           : BorderRadius.zero,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.6),
+                          color: Colors.black.withValues(alpha: 0.5),
                           blurRadius: 12,
                           offset: const Offset(0, 6),
                         ),

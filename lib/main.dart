@@ -1,15 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'screens/music_list_screen.dart';
+import 'screens/main_screen.dart';
 import 'providers/player_provider.dart';
+import 'providers/home_provider.dart';
+import 'providers/browser_provider.dart';
+import 'providers/library_provider.dart';
+import 'providers/audio_player_provider.dart';
+import 'providers/theme_provider.dart';
 import 'services/media_service.dart';
 import 'package:photo_manager/photo_manager.dart';
+import 'theme/app_theme.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize AudioPlayerProvider
+  final audioPlayerProvider = AudioPlayerProvider();
+  audioPlayerProvider.initialize();
+  
   runApp(
     MultiProvider(
-      providers: [ChangeNotifierProvider(create: (_) => PlayerProvider())],
+      providers: [
+        ChangeNotifierProvider(create: (_) => PlayerProvider()),
+        ChangeNotifierProvider(create: (_) => HomeProvider()),
+        ChangeNotifierProvider(create: (_) => BrowserProvider()),
+        ChangeNotifierProvider(create: (_) => LibraryProvider()),
+        ChangeNotifierProvider.value(value: audioPlayerProvider),
+        ChangeNotifierProvider(create: (_) => ThemeProvider()),
+      ],
       child: const ProPlayer(),
     ),
   );
@@ -20,11 +38,17 @@ class ProPlayer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'ProPlayer',
-      theme: ThemeData.dark(),
-      home: const PermissionHandlerScreen(),
+    return Consumer<ThemeProvider>(
+      builder: (context, themeProvider, _) {
+        return MaterialApp(
+          debugShowCheckedModeBanner: false,
+          title: 'ProPlayer',
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeProvider.themeMode,
+          home: const PermissionHandlerScreen(),
+        );
+      },
     );
   }
 }
@@ -65,7 +89,7 @@ class _PermissionHandlerScreenState extends State<PermissionHandlerScreen> {
 
     if (!_isGranted) {
       return Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: AppTheme.scaffoldBackgroundColor,
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -94,6 +118,10 @@ class _PermissionHandlerScreenState extends State<PermissionHandlerScreen> {
                     await PhotoManager.openSetting();
                   }
                 },
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: AppTheme.primaryColor,
+                  foregroundColor: Colors.white,
+                ),
                 icon: const Icon(Icons.settings),
                 label: const Text('Grant Permission'),
               ),
@@ -103,7 +131,7 @@ class _PermissionHandlerScreenState extends State<PermissionHandlerScreen> {
       );
     }
 
-    // ✅ Permission granted — go to main music list
-    return const MusicListScreen();
+    // ✅ Permission granted — go to main screen
+    return const MainScreen();
   }
 }

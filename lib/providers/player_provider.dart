@@ -1,38 +1,26 @@
 import 'package:flutter/material.dart';
-import 'package:photo_manager/photo_manager.dart';
-import 'package:just_audio/just_audio.dart';
+import '../models/media_item.dart';
 
 class PlayerProvider extends ChangeNotifier {
-  final AudioPlayer _audioPlayer = AudioPlayer();
-  AssetEntity? _currentSong;
+  MediaItem? _currentMedia;
   bool _isPlaying = false;
 
-  AssetEntity? get currentSong => _currentSong;
+  MediaItem? get currentMedia => _currentMedia;
   bool get isPlaying => _isPlaying;
 
-  Future<void> playSong(AssetEntity song) async {
-    _currentSong = song;
-    final file = await song.file;
-    if (file != null) {
-      await _audioPlayer.setFilePath(file.path);
-      _audioPlayer.play();
-      _isPlaying = true;
-      notifyListeners();
-    }
+  void play(MediaItem media) {
+    _currentMedia = media;
+    _isPlaying = true;
+    notifyListeners();
   }
 
-  void togglePlayPause() {
-    if (_isPlaying) {
-      _audioPlayer.pause();
-    } else {
-      _audioPlayer.play();
-    }
-    _isPlaying = !_isPlaying;
+  void pause() {
+    _isPlaying = false;
     notifyListeners();
   }
 
   void stop() {
-    _audioPlayer.stop();
+    _currentMedia = null;
     _isPlaying = false;
     notifyListeners();
   }
