@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
-import '../theme/app_theme.dart';
+// theme import removed; use Theme.of(context) instead
 import '../widgets/media_card.dart';
 import '../providers/browser_provider.dart';
 import '../providers/home_provider.dart';
@@ -27,6 +27,8 @@ class _BrowseScreenState extends State<BrowseScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -37,20 +39,20 @@ class _BrowseScreenState extends State<BrowseScreen> {
               // Header
               Row(
                 children: [
-                  const Icon(CupertinoIcons.globe,
-                      color: AppTheme.accentColor, size: 28),
+                  Icon(CupertinoIcons.globe,
+                      color: theme.colorScheme.secondary, size: 28),
                   const SizedBox(width: 12),
-                  const Text(
+                  Text(
                     'Browse Online',
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: theme.colorScheme.onSurface,
                     ),
                   ),
                   const Spacer(),
                   IconButton(
-                    icon: const Icon(Icons.refresh, color: Colors.white),
+                    icon: Icon(Icons.refresh, color: theme.colorScheme.onSurface),
                     onPressed: () {
                       // Trigger refresh
                       final browserProvider = Provider.of<BrowserProvider>(context, listen: false);
@@ -58,10 +60,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
                       
                       // Refresh random mix
                       Provider.of<HomeProvider>(context, listen: false).loadHomeData();
-                      
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Refreshing content...')),
-                      );
+
                     },
                   ),
                 ],
@@ -83,10 +82,9 @@ class _BrowseScreenState extends State<BrowseScreen> {
                 },
                 decoration: InputDecoration(
                   hintText: 'Search gospel songs...',
-                  prefixIcon:
-                      const Icon(CupertinoIcons.search, color: Colors.grey),
+                  prefixIcon: Icon(CupertinoIcons.search, color: theme.hintColor),
                   filled: true,
-                  fillColor: AppTheme.surfaceColor,
+                  fillColor: theme.cardColor,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(16),
                     borderSide: BorderSide.none,
@@ -96,12 +94,12 @@ class _BrowseScreenState extends State<BrowseScreen> {
               const SizedBox(height: 30),
 
               // Categories
-              const Text(
+              Text(
                 'Gospel Categories',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 16),
@@ -128,19 +126,19 @@ class _BrowseScreenState extends State<BrowseScreen> {
               const SizedBox(height: 30),
 
               // Random Picks
-              const Text(
+              Text(
                 'Random Picks',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: theme.colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 16),
               Consumer<HomeProvider>(
                 builder: (context, homeProvider, _) {
                   if (homeProvider.randomMix.isEmpty) {
-                     return const Center(child: CircularProgressIndicator());
+            return const Center(child: CircularProgressIndicator());
                   }
                   return SizedBox(
                     height: 240,
@@ -219,10 +217,10 @@ class _BrowseScreenState extends State<BrowseScreen> {
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                          color: Theme.of(context).colorScheme.onPrimary,
                         ),
                       ),
                       const SizedBox(height: 4),
@@ -230,7 +228,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
                         subtitle,
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.white.withValues(alpha: 0.8),
+                          color: Theme.of(context).colorScheme.onPrimary.withAlpha(204),
                         ),
                       ),
                     ],
@@ -239,12 +237,12 @@ class _BrowseScreenState extends State<BrowseScreen> {
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: Theme.of(context).colorScheme.onSurface.withAlpha(51),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.arrow_forward_ios,
-                    color: Colors.white,
+                    color: Theme.of(context).colorScheme.onSurface,
                     size: 16,
                   ),
                 ),

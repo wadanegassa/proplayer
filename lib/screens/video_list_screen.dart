@@ -87,11 +87,12 @@ class _VideoListScreenState extends State<VideoListScreen> {
                   fit: BoxFit.cover,
                 );
               }
+              final theme = Theme.of(context);
               return Container(
                 width: 64,
                 height: 64,
-                color: Colors.grey,
-                child: const Icon(Icons.videocam, color: Colors.white),
+                color: theme.cardColor,
+                child: Icon(Icons.videocam, color: theme.colorScheme.onSurface),
               );
             },
           ),

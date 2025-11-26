@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
-import '../theme/app_theme.dart';
+// app_theme removed; prefer Theme.of(context) where needed
 import '../widgets/media_card.dart';
 import '../providers/library_provider.dart';
 import '../models/media_item.dart';
@@ -55,8 +55,10 @@ class _LibraryScreenState extends State<LibraryScreen>
   Widget build(BuildContext context) {
     // Use LayoutBuilder to handle responsiveness at the screen level if needed,
     // but here we mainly need it for the grid.
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -91,46 +93,44 @@ class _LibraryScreenState extends State<LibraryScreen>
           Row(
             children: [
               // Title Section
-              Container(
-                padding: const EdgeInsets.all(10),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [Colors.orange, Colors.deepOrange],
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(colors: [Theme.of(context).colorScheme.primary, Theme.of(context).colorScheme.secondary]),
+                    borderRadius: BorderRadius.circular(12),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Theme.of(context).colorScheme.primary.withAlpha(72),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
                   ),
-                  borderRadius: BorderRadius.circular(12),
-                  boxShadow: [
-                    BoxShadow(
-                      color: Colors.orange.withValues(alpha: 0.3),
-                      blurRadius: 8,
-                      offset: const Offset(0, 2),
-                    ),
-                  ],
+                  child: Icon(
+                    CupertinoIcons.music_albums_fill,
+                    color: Theme.of(context).colorScheme.onPrimary,
+                    size: 20,
+                  ),
                 ),
-                child: const Icon(
-                  CupertinoIcons.music_albums_fill,
-                  color: Colors.white,
-                  size: 20,
-                ),
-              ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Library',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                      Text(
+                        'Library',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          color: Theme.of(context).textTheme.headlineSmall?.color,
+                        ),
                       ),
-                    ),
                     Consumer<LibraryProvider>(
                       builder: (context, provider, _) {
                         return Text(
                           '${provider.audioFiles.length} Songs • ${provider.videoFiles.length} Videos',
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.6),
+                             color: Theme.of(context).textTheme.bodySmall?.color?.withAlpha((0.6 * 255).round()),
                             fontSize: 12,
                           ),
                         );
@@ -142,17 +142,17 @@ class _LibraryScreenState extends State<LibraryScreen>
               // Refresh Action
               Consumer<LibraryProvider>(
                 builder: (context, provider, _) {
-                  return IconButton(
+                    return IconButton(
                     icon: provider.isScanning
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 20,
                             height: 20,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: Colors.white,
+                              color: Theme.of(context).colorScheme.primary,
                             ),
                           )
-                        : const Icon(CupertinoIcons.refresh, color: Colors.white),
+                        : Icon(CupertinoIcons.refresh, color: Theme.of(context).textTheme.bodySmall?.color),
                     onPressed: provider.isScanning
                         ? null
                         : () => provider.scanMedia(),
@@ -166,28 +166,28 @@ class _LibraryScreenState extends State<LibraryScreen>
           // Search Bar
           SizedBox(
             height: 40,
-            child: TextField(
+              child: TextField(
               controller: _searchController,
               onChanged: _onSearchChanged,
-              style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: Theme.of(context).textTheme.bodyMedium?.color),
               decoration: InputDecoration(
                 hintText: 'Search songs, videos...',
-                hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.4)),
-                prefixIcon: Icon(
-                  CupertinoIcons.search,
-                  color: Colors.white.withValues(alpha: 0.4),
-                  size: 18,
-                ),
-                filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.1),
+                  hintStyle: TextStyle(color: Theme.of(context).textTheme.bodySmall?.color?.withAlpha((0.4 * 255).round())),
+                  prefixIcon: Icon(
+                    CupertinoIcons.search,
+                    color: Theme.of(context).textTheme.bodySmall?.color?.withAlpha((0.4 * 255).round()),
+                    size: 18,
+                  ),
+                  filled: true,
+                  fillColor: Theme.of(context).colorScheme.surface.withAlpha(15),
                 border: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(10),
                   borderSide: BorderSide.none,
                 ),
                 contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-                suffixIcon: _searchQuery.isNotEmpty
+                  suffixIcon: _searchQuery.isNotEmpty
                     ? IconButton(
-                        icon: const Icon(CupertinoIcons.clear, color: Colors.white70, size: 16),
+                        icon: Icon(CupertinoIcons.clear, color: Theme.of(context).colorScheme.onSurface.withAlpha(179), size: 16),
                         onPressed: () {
                           _searchController.clear();
                           _onSearchChanged('');
@@ -207,17 +207,17 @@ class _LibraryScreenState extends State<LibraryScreen>
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       height: 36,
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.05),
+  color: Theme.of(context).colorScheme.surface.withAlpha((0.05 * 255).round()),
         borderRadius: BorderRadius.circular(10),
       ),
       child: TabBar(
         controller: _tabController,
         indicator: BoxDecoration(
-          color: AppTheme.primaryColor,
+          color: Theme.of(context).colorScheme.primary,
           borderRadius: BorderRadius.circular(10),
         ),
-        labelColor: Colors.white,
-        unselectedLabelColor: Colors.grey,
+        labelColor: Theme.of(context).colorScheme.onPrimary,
+  unselectedLabelColor: Theme.of(context).textTheme.bodySmall?.color?.withAlpha((0.8 * 255).round()),
         labelStyle: const TextStyle(
           fontWeight: FontWeight.w600,
           fontSize: 13,
@@ -266,8 +266,8 @@ class _LibraryScreenState extends State<LibraryScreen>
 
         return RefreshIndicator(
           onRefresh: () => provider.scanMedia(),
-          color: AppTheme.primaryColor,
-          backgroundColor: AppTheme.surfaceColor,
+          color: Theme.of(context).colorScheme.primary,
+          backgroundColor: Theme.of(context).cardColor,
           child: GridView.builder(
             padding: const EdgeInsets.all(16),
             gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
@@ -318,18 +318,18 @@ class _LibraryScreenState extends State<LibraryScreen>
 
   Widget _buildLoadingState() {
     return Center(
-      child: Column(
+          child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          const CircularProgressIndicator(color: AppTheme.primaryColor),
+          CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
           const SizedBox(height: 16),
-          Text(
-            'Scanning Library...',
-            style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.7),
-              fontSize: 16,
-            ),
-          ),
+           Text(
+             'Scanning Library...',
+             style: TextStyle(
+               color: Theme.of(context).textTheme.bodyMedium?.color?.withAlpha(179),
+               fontSize: 16,
+             ),
+           ),
         ],
       ),
     );
@@ -347,13 +347,13 @@ class _LibraryScreenState extends State<LibraryScreen>
           Icon(
             isVideo ? Icons.videocam_off : CupertinoIcons.music_note_list,
             size: 64,
-            color: Colors.white.withValues(alpha: 0.2),
+             color: Theme.of(context).colorScheme.onSurface.withAlpha(51),
           ),
           const SizedBox(height: 16),
           Text(
             message,
             style: TextStyle(
-              color: Colors.white.withValues(alpha: 0.6),
+               color: Theme.of(context).textTheme.bodyMedium?.color?.withAlpha((0.6 * 255).round()),
               fontSize: 16,
             ),
           ),
@@ -381,22 +381,22 @@ class _LibraryScreenState extends State<LibraryScreen>
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
+               color: Theme.of(context).colorScheme.surface.withAlpha((0.05 * 255).round()),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               CupertinoIcons.folder,
               size: 48,
-              color: Colors.white54,
+               color: Theme.of(context).colorScheme.onSurface.withAlpha((0.54 * 255).round()),
             ),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             'Folder View',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+               color: Theme.of(context).textTheme.headlineSmall?.color,
             ),
           ),
           const SizedBox(height: 8),
@@ -404,7 +404,7 @@ class _LibraryScreenState extends State<LibraryScreen>
             'Browse by folders coming soon',
             style: TextStyle(
               fontSize: 14,
-              color: Colors.white.withValues(alpha: 0.5),
+               color: Theme.of(context).textTheme.bodySmall?.color?.withAlpha((0.5 * 255).round()),
             ),
           ),
         ],

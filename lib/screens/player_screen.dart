@@ -73,7 +73,9 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
     final song = widget.audioService.currentSong;
     if (song == null) return const SizedBox();
 
-    return DraggableScrollableSheet(
+  final theme = Theme.of(context);
+
+  return DraggableScrollableSheet(
       expand: false,
       initialChildSize: 0.9,
       minChildSize: 0.5,
@@ -95,7 +97,7 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
               height: 5,
               margin: const EdgeInsets.symmetric(vertical: 10),
               decoration: BoxDecoration(
-                color: Colors.white30,
+                color: theme.colorScheme.onSurface.withAlpha(77),
                 borderRadius: BorderRadius.circular(10),
               ),
             ),
@@ -117,10 +119,10 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
                   end: Alignment.bottomRight,
                 ),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.music_note_rounded,
                 size: 120,
-                color: Colors.white,
+                color: theme.colorScheme.onSurface,
               ),
             ),
 
@@ -129,8 +131,8 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
             // Song title
             Text(
               song.title ?? 'Unknown Song',
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: theme.colorScheme.onSurface,
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
               ),
@@ -138,9 +140,9 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
               overflow: TextOverflow.ellipsis,
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               "Unknown Artist",
-              style: TextStyle(color: Colors.white70),
+              style: TextStyle(color: theme.colorScheme.onSurface.withAlpha(179)),
             ),
 
             const SizedBox(height: 20),
@@ -154,8 +156,8 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
                     value: progress,
                     min: 0,
                     max: 1,
-                    activeColor: const Color.fromARGB(255, 98, 0, 0),
-                    inactiveColor: Colors.white24,
+                    activeColor: theme.colorScheme.primary,
+                    inactiveColor: theme.colorScheme.onSurface.withAlpha(61),
                     onChanged: (value) async {
                       final duration = widget.audioService.player.duration;
                       if (duration != null) {
@@ -169,13 +171,13 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
                     children: [
                       Text(
                         _formatDuration(widget.audioService.player.position),
-                        style: const TextStyle(color: Colors.white70),
+                        style: TextStyle(color: theme.colorScheme.onSurface.withAlpha(179)),
                       ),
                       Text(
                         _formatDuration(
                           widget.audioService.player.duration ?? Duration.zero,
                         ),
-                        style: const TextStyle(color: Colors.white70),
+                        style: TextStyle(color: theme.colorScheme.onSurface.withAlpha(179)),
                       ),
                     ],
                   ),
@@ -190,9 +192,9 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 IconButton(
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.skip_previous_rounded,
-                    color: Colors.white,
+                    color: theme.colorScheme.onSurface,
                     size: 40,
                   ),
                   onPressed: _prevSong,
@@ -203,20 +205,10 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
                   child: Container(
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      color: const Color.fromARGB(
-                        255,
-                        88,
-                        1,
-                        1,
-                      ).withValues(alpha: 0.9),
+                      color: theme.colorScheme.primary.withAlpha(230),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color.fromARGB(
-                            255,
-                            252,
-                            75,
-                            75,
-                          ).withValues(alpha: 0.6),
+                          color: theme.colorScheme.primary.withAlpha(153),
                           blurRadius: 15,
                           spreadRadius: 3,
                         ),
@@ -227,16 +219,16 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
                       isPlaying
                           ? Icons.pause_rounded
                           : Icons.play_arrow_rounded,
-                      color: Colors.white,
+                      color: theme.colorScheme.onSurface,
                       size: 50,
                     ),
                   ),
                 ),
                 const SizedBox(width: 15),
                 IconButton(
-                  icon: const Icon(
+                  icon: Icon(
                     Icons.skip_next_rounded,
-                    color: Colors.white,
+                    color: theme.colorScheme.onSurface,
                     size: 40,
                   ),
                   onPressed: _nextSong,
@@ -249,11 +241,11 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
             // Bottom row
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-              children: const [
-                Icon(Icons.shuffle, color: Colors.white70),
-                Icon(Icons.favorite_border, color: Colors.white70),
-                Icon(Icons.repeat, color: Colors.white70),
-                Icon(Icons.queue_music, color: Colors.white70),
+              children: [
+                Icon(Icons.shuffle, color: theme.colorScheme.onSurface.withAlpha(179)),
+                Icon(Icons.favorite_border, color: theme.colorScheme.onSurface.withAlpha(179)),
+                Icon(Icons.repeat, color: theme.colorScheme.onSurface.withAlpha(179)),
+                Icon(Icons.queue_music, color: theme.colorScheme.onSurface.withAlpha(179)),
               ],
             ),
 

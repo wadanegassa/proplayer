@@ -3,7 +3,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class ThemeProvider extends ChangeNotifier {
   static const String _themeKey = 'theme_mode';
-  ThemeMode _themeMode = ThemeMode.dark;
+  // Temporarily default to light for quick verification of the bottom nav light styling.
+  // (Change back after verification or rely on stored preference.)
+  ThemeMode _themeMode = ThemeMode.light;
   
   ThemeMode get themeMode => _themeMode;
   bool get isDarkMode => _themeMode == ThemeMode.dark;
@@ -15,7 +17,8 @@ class ThemeProvider extends ChangeNotifier {
   Future<void> _loadTheme() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      final isDark = prefs.getBool(_themeKey) ?? true;
+      // Default to light (false) so a fresh run shows light mode for verification.
+      final isDark = prefs.getBool(_themeKey) ?? false;
       _themeMode = isDark ? ThemeMode.dark : ThemeMode.light;
       notifyListeners();
     } catch (e) {

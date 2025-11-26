@@ -38,31 +38,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        title: const Text('Settings'),
+      ),
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(20),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Header
-              const Row(
-                children: [
-                  Icon(CupertinoIcons.settings_solid,
-                      color: AppTheme.accentColor, size: 28),
-                  SizedBox(width: 12),
-                  Text(
-                    'Settings',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 30),
-
               // Appearance Section
+              const SizedBox(height: 12),
               _buildSectionTitle('Appearance'),
               const SizedBox(height: 12),
               Consumer<ThemeProvider>(
@@ -87,7 +75,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                 'Dark Mode',
                                 style: TextStyle(
                                   fontSize: 16,
-                                  color: Theme.of(context).colorScheme.onSurface,
+                                  color: Theme.of(context).textTheme.bodyMedium?.color,
                                   fontWeight: FontWeight.w500,
                                 ),
                               ),
@@ -98,7 +86,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                                     : 'Light theme active',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.5),
+                                  color: Theme.of(context).textTheme.bodySmall?.color?.withAlpha((0.7 * 255).round()),
                                 ),
                               ),
                             ],
@@ -107,13 +95,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         Switch(
                           value: themeProvider.isDarkMode,
                           onChanged: (_) => themeProvider.toggleTheme(),
-                          activeColor: Theme.of(context).colorScheme.primary,
+                          activeThumbColor: Theme.of(context).colorScheme.primary,
                         ),
                       ],
                     ),
                   );
                 },
               ),
+
               const SizedBox(height: 30),
 
               // App Info Section
@@ -128,7 +117,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       'Version',
                       _appVersion,
                     ),
-                    const Divider(height: 24, color: Colors.white24),
+                    Divider(height: 24, color: Theme.of(context).colorScheme.onSurface.withAlpha((0.24 * 255).round())),
                     _buildInfoRow(
                       CupertinoIcons.device_phone_portrait,
                       'Platform',
@@ -137,6 +126,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
               ),
+
               const SizedBox(height: 30),
 
               // Storage Section
@@ -152,7 +142,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       'Free up storage space',
                       () => _showClearCacheDialog(),
                     ),
-                    const Divider(height: 24, color: Colors.white24),
+                    Divider(height: 24, color: Theme.of(context).colorScheme.onSurface.withAlpha((0.24 * 255).round())),
                     _buildActionRow(
                       CupertinoIcons.delete,
                       'Clear History',
@@ -162,6 +152,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
               ),
+
               const SizedBox(height: 30),
 
               // About Section
@@ -177,21 +168,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       'Support us with a review',
                       () => _showComingSoonDialog('Rate App'),
                     ),
-                    const Divider(height: 24, color: Colors.white24),
+                    Divider(height: 24, color: Theme.of(context).colorScheme.onSurface.withAlpha((0.24 * 255).round())),
                     _buildActionRow(
                       CupertinoIcons.share,
                       'Share App',
                       'Tell your friends',
                       () => _showComingSoonDialog('Share App'),
                     ),
-                    const Divider(height: 24, color: Colors.white24),
+                    Divider(height: 24, color: Theme.of(context).colorScheme.onSurface.withAlpha((0.24 * 255).round())),
                     _buildActionRow(
                       CupertinoIcons.doc_text,
                       'Privacy Policy',
                       'Read our privacy policy',
                       () => _showComingSoonDialog('Privacy Policy'),
                     ),
-                    const Divider(height: 24, color: Colors.white24),
+                    Divider(height: 24, color: Theme.of(context).colorScheme.onSurface.withAlpha((0.24 * 255).round())),
                     _buildActionRow(
                       CupertinoIcons.doc_plaintext,
                       'Terms of Service',
@@ -201,18 +192,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ],
                 ),
               ),
+
               const SizedBox(height: 30),
 
               // Developer Info
               Center(
                 child: Column(
                   children: [
-                    const Text(
+                    Text(
                       'ProPlayer',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: Theme.of(context).textTheme.bodyMedium?.color,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -220,7 +212,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       'Made with ❤️ for music lovers',
                       style: TextStyle(
                         fontSize: 14,
-                        color: Colors.white.withValues(alpha: 0.6),
+                        color: Theme.of(context).textTheme.bodySmall?.color?.withAlpha((0.6 * 255).round()),
                       ),
                     ),
                   ],
@@ -236,10 +228,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 18,
         fontWeight: FontWeight.bold,
-        color: Colors.white,
+        color: Theme.of(context).textTheme.bodyMedium?.color,
       ),
     );
   }
@@ -252,9 +244,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
-              color: Colors.white,
+              color: Theme.of(context).textTheme.bodyMedium?.color,
             ),
           ),
         ),
@@ -262,7 +254,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           value,
           style: TextStyle(
             fontSize: 14,
-            color: Colors.white.withValues(alpha: 0.6),
+            color: Theme.of(context).textTheme.bodySmall?.color?.withAlpha((0.6 * 255).round()),
           ),
         ),
       ],
@@ -290,9 +282,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
-                      color: Colors.white,
+                      color: Theme.of(context).textTheme.bodyMedium?.color,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -301,7 +293,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     subtitle,
                     style: TextStyle(
                       fontSize: 12,
-                      color: Colors.white.withValues(alpha: 0.5),
+                      color: Theme.of(context).textTheme.bodySmall?.color?.withAlpha((0.5 * 255).round()),
                     ),
                   ),
                 ],
@@ -309,7 +301,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
             Icon(
               CupertinoIcons.chevron_right,
-              color: Colors.white.withValues(alpha: 0.3),
+              color: Theme.of(context).textTheme.bodySmall?.color?.withAlpha((0.3 * 255).round()),
               size: 18,
             ),
           ],
@@ -319,14 +311,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showClearCacheDialog() {
+    final theme = Theme.of(context);
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.surfaceColor,
-        title: const Text('Clear Cache', style: TextStyle(color: Colors.white)),
-        content: const Text(
+  builder: (context) => AlertDialog(
+  backgroundColor: theme.dialogTheme.backgroundColor,
+        title: Text('Clear Cache', style: TextStyle(color: theme.textTheme.bodyLarge?.color)),
+        content: Text(
           'This will clear all cached images and data. Continue?',
-          style: TextStyle(color: Colors.white70),
+          style: TextStyle(color: theme.textTheme.bodyMedium?.color?.withAlpha((0.8 * 255).round())),
         ),
         actions: [
           TextButton(
@@ -348,14 +342,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showClearHistoryDialog() {
+    final theme = Theme.of(context);
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.surfaceColor,
-        title: const Text('Clear History', style: TextStyle(color: Colors.white)),
-        content: const Text(
+  builder: (context) => AlertDialog(
+  backgroundColor: theme.dialogTheme.backgroundColor,
+        title: Text('Clear History', style: TextStyle(color: theme.textTheme.bodyLarge?.color)),
+        content: Text(
           'This will remove all recently played items. Continue?',
-          style: TextStyle(color: Colors.white70),
+          style: TextStyle(color: theme.textTheme.bodyMedium?.color?.withAlpha((0.8 * 255).round())),
         ),
         actions: [
           TextButton(
@@ -377,14 +373,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showComingSoonDialog(String feature) {
+    final theme = Theme.of(context);
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppTheme.surfaceColor,
-        title: Text(feature, style: const TextStyle(color: Colors.white)),
-        content: const Text(
+  builder: (context) => AlertDialog(
+  backgroundColor: theme.dialogTheme.backgroundColor,
+        title: Text(feature, style: TextStyle(color: theme.textTheme.bodyLarge?.color)),
+        content: Text(
           'This feature is coming soon!',
-          style: TextStyle(color: Colors.white70),
+          style: TextStyle(color: theme.textTheme.bodyMedium?.color?.withAlpha((0.8 * 255).round())),
         ),
         actions: [
           TextButton(

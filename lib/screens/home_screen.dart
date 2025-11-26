@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
-import '../theme/app_theme.dart';
 import '../widgets/media_card.dart';
 import '../providers/home_provider.dart';
 import 'video_player_screen.dart';
@@ -33,6 +32,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final titleFontSize = isTablet ? 32.0 : 28.0;
     final subtitleFontSize = isTablet ? 16.0 : 14.0;
     
+    final theme = Theme.of(context);
+
     return Scaffold(
       body: SafeArea(
         child: Consumer<HomeProvider>(
@@ -58,13 +59,13 @@ class _HomeScreenState extends State<HomeScreen> {
                               style: TextStyle(
                                 fontSize: titleFontSize,
                                 fontWeight: FontWeight.bold,
-                                color: Colors.white,
+                                color: theme.textTheme.headlineSmall?.color,
                               ),
                             ),
                             Text(
                               'Listen to your favorite music',
                               style: TextStyle(
-                                color: Colors.grey,
+                                color: theme.textTheme.bodySmall?.color?.withAlpha((0.8 * 255).round()),
                                 fontSize: subtitleFontSize,
                               ),
                             ),
@@ -72,7 +73,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ),
                       IconButton(
-                        icon: const Icon(CupertinoIcons.settings, color: Colors.white),
+                        icon: Icon(Icons.settings, color: theme.iconTheme.color),
                         onPressed: () {
                           Navigator.pushNamed(context, '/settings');
                         },
@@ -96,10 +97,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     },
                     decoration: InputDecoration(
                       hintText: 'Search songs, artist...',
-                      prefixIcon:
-                          const Icon(CupertinoIcons.search, color: Colors.grey),
+            prefixIcon:
+              Icon(CupertinoIcons.search, color: theme.iconTheme.color?.withAlpha((0.6 * 255).round())),
                       filled: true,
-                      fillColor: AppTheme.surfaceColor,
+                      fillColor: Theme.of(context).inputDecorationTheme.fillColor ?? Theme.of(context).cardColor,
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(16),
                         borderSide: BorderSide.none,
@@ -109,13 +110,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   SizedBox(height: isTablet ? 40 : 30),
 
                   // Recently Played
-                  if (provider.recentlyPlayed.isNotEmpty) ...[
-                    const Text(
+                    if (provider.recentlyPlayed.isNotEmpty) ...[
+                    Text(
                       'Recently Played',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: theme.textTheme.titleLarge?.color,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -153,12 +154,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
 
                   // Random Browser Songs
-                  const Text(
-                    'Random Mix',
+                  Text(
+                    'Explore More',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: theme.textTheme.titleLarge?.color,
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -193,19 +194,19 @@ class _HomeScreenState extends State<HomeScreen> {
                   const SizedBox(height: 30),
 
                   // Local File Songs
-                  const Text(
+                  Text(
                     'Local Songs',
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.white,
+                      color: theme.textTheme.titleLarge?.color,
                     ),
                   ),
                   const SizedBox(height: 16),
                   if (provider.localSongs.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.only(top: 8.0),
-                      child: Text('No local songs found', style: TextStyle(color: Colors.grey)),
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0),
+                      child: Text('No local songs found', style: TextStyle(color: theme.textTheme.bodyMedium?.color?.withAlpha((0.7 * 255).round()))),
                     )
                   else
                     SizedBox(

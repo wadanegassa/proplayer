@@ -17,7 +17,9 @@ class MiniPlayer extends StatelessWidget {
 
         final track = playerProvider.currentTrack!;
 
-        return GestureDetector(
+  final theme = Theme.of(context);
+
+  return GestureDetector(
           onTap: () {
             playerProvider.setMinimized(false);
             Navigator.push(
@@ -39,13 +41,13 @@ class MiniPlayer extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  const Color(0xFF0284C7).withValues(alpha: 0.9), // Cool blue
-                  const Color(0xFF0891B2).withValues(alpha: 0.9), // Cyan
+                  theme.colorScheme.primary.withAlpha(230),
+                  theme.colorScheme.secondary.withAlpha(230),
                 ],
               ),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
+                  color: theme.shadowColor.withAlpha(77),
                   blurRadius: 10,
                   offset: const Offset(0, -2),
                 ),
@@ -53,16 +55,17 @@ class MiniPlayer extends StatelessWidget {
             ),
             child: Column(
               children: [
-                // Progress bar
-                LinearProgressIndicator(
-                  value: playerProvider.duration.inSeconds > 0
-                      ? playerProvider.position.inSeconds /
-                          playerProvider.duration.inSeconds
-                      : 0,
-                  backgroundColor: Colors.white.withValues(alpha: 0.2),
-                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
-                  minHeight: 2,
-                ),
+        // Progress bar
+        LinearProgressIndicator(
+          value: playerProvider.duration.inSeconds > 0
+            ? playerProvider.position.inSeconds /
+              playerProvider.duration.inSeconds
+            : 0,
+          backgroundColor: theme.colorScheme.onSurface.withAlpha(51),
+          valueColor:
+            AlwaysStoppedAnimation<Color>(theme.colorScheme.onSurface),
+          minHeight: 2,
+        ),
                 Expanded(
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -72,8 +75,8 @@ class MiniPlayer extends StatelessWidget {
                         Container(
                           width: 45,
                           height: 45,
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.2),
+                            decoration: BoxDecoration(
+                            color: theme.colorScheme.onSurface.withAlpha(51),
                             borderRadius: BorderRadius.circular(8),
                           ),
                           child: track.thumbnailBytes != null
@@ -84,9 +87,9 @@ class MiniPlayer extends StatelessWidget {
                                     fit: BoxFit.cover,
                                   ),
                                 )
-                              : const Icon(
+                              : Icon(
                                   CupertinoIcons.music_note,
-                                  color: Colors.white,
+                                  color: theme.colorScheme.onSurface,
                                   size: 24,
                                 ),
                         ),
@@ -99,8 +102,8 @@ class MiniPlayer extends StatelessWidget {
                             children: [
                               Text(
                                 track.title,
-                                style: const TextStyle(
-                                  color: Colors.white,
+                                style: TextStyle(
+                                  color: theme.colorScheme.onSurface,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
                                 ),
@@ -110,7 +113,7 @@ class MiniPlayer extends StatelessWidget {
                               Text(
                                 track.subtitle,
                                 style: TextStyle(
-                                  color: Colors.white.withValues(alpha: 0.8),
+                                  color: theme.colorScheme.onSurface.withAlpha(204),
                                   fontSize: 12,
                                 ),
                                 maxLines: 1,
@@ -125,7 +128,7 @@ class MiniPlayer extends StatelessWidget {
                             playerProvider.isPlaying
                                 ? CupertinoIcons.pause_fill
                                 : CupertinoIcons.play_fill,
-                            color: Colors.white,
+                            color: theme.colorScheme.onSurface,
                           ),
                           onPressed: () {
                             if (playerProvider.isPlaying) {
@@ -136,9 +139,9 @@ class MiniPlayer extends StatelessWidget {
                           },
                         ),
                         IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             CupertinoIcons.forward_fill,
-                            color: Colors.white,
+                            color: theme.colorScheme.onSurface,
                           ),
                           onPressed: playerProvider.currentIndex <
                                   playerProvider.playlist.length - 1
@@ -146,9 +149,9 @@ class MiniPlayer extends StatelessWidget {
                               : null,
                         ),
                         IconButton(
-                          icon: const Icon(
+                          icon: Icon(
                             CupertinoIcons.xmark,
-                            color: Colors.white,
+                            color: theme.colorScheme.onSurface,
                           ),
                           onPressed: () => playerProvider.stop(),
                         ),

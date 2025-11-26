@@ -10,6 +10,7 @@ import 'providers/theme_provider.dart';
 import 'services/media_service.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'theme/app_theme.dart';
+import 'screens/settings_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -47,6 +48,9 @@ class ProPlayer extends StatelessWidget {
           darkTheme: AppTheme.darkTheme,
           themeMode: themeProvider.themeMode,
           home: const PermissionHandlerScreen(),
+          routes: {
+            '/settings': (context) => const SettingsScreen(),
+          },
         );
       },
     );
@@ -88,23 +92,24 @@ class _PermissionHandlerScreenState extends State<PermissionHandlerScreen> {
     }
 
     if (!_isGranted) {
+      final theme = Theme.of(context);
       return Scaffold(
-        backgroundColor: AppTheme.scaffoldBackgroundColor,
+        backgroundColor: theme.scaffoldBackgroundColor,
         body: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Icon(Icons.folder_off, size: 80, color: Colors.grey),
+              Icon(Icons.folder_off, size: 80, color: theme.iconTheme.color),
               const SizedBox(height: 20),
-              const Text(
+              Text(
                 'Permission Required',
-                style: TextStyle(fontSize: 20, color: Colors.white),
+                style: TextStyle(fontSize: 20, color: theme.textTheme.headlineSmall?.color),
               ),
               const SizedBox(height: 10),
-              const Text(
+              Text(
                 'Allow storage/media access to load your music and videos.',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey),
+                style: TextStyle(color: theme.textTheme.bodyMedium?.color?.withAlpha((0.8 * 255).round())),
               ),
               const SizedBox(height: 25),
               ElevatedButton.icon(
@@ -120,10 +125,10 @@ class _PermissionHandlerScreenState extends State<PermissionHandlerScreen> {
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppTheme.primaryColor,
-                  foregroundColor: Colors.white,
+                  foregroundColor: theme.colorScheme.onPrimary,
                 ),
-                icon: const Icon(Icons.settings),
-                label: const Text('Grant Permission'),
+                icon: Icon(Icons.settings, color: theme.colorScheme.onPrimary),
+                label: Text('Grant Permission', style: TextStyle(color: theme.colorScheme.onPrimary)),
               ),
             ],
           ),

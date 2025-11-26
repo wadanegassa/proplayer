@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_nav_bar/google_nav_bar.dart';
+// custom bottom navigation implemented below
 import '../widgets/mini_player.dart';
 import 'home_screen.dart';
 import 'browse_screen.dart';
 import 'library_screen.dart';
+import 'package:fluid_bottom_nav_bar/fluid_bottom_nav_bar.dart';
 
 class MainScreen extends StatefulWidget {
   const MainScreen({super.key});
@@ -14,6 +15,7 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   int _currentIndex = 0;
+  // using FluidNavBar from fluid_bottom_nav_bar
 
   final List<Widget> _screens = [
     const HomeScreen(),
@@ -23,6 +25,7 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // no external controller needed for FluidNavBar
     return Scaffold(
       body: Stack(
         children: [
@@ -36,59 +39,47 @@ class _MainScreenState extends State<MainScreen> {
         mainAxisSize: MainAxisSize.min,
         children: [
           const MiniPlayer(),
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(25),
-              color: const Color(0xFF1A1A2E),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.3),
-                  blurRadius: 30,
-                  offset: const Offset(0, -10),
-                ),
-              ],
-            ),
-            child: SafeArea(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                child: GNav(
-                  gap: 8,
-                  activeColor: Colors.white,
-                  iconSize: 24,
-                  padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                  duration: const Duration(milliseconds: 400),
-                  tabBackgroundColor: const Color(0xFF0891B2).withValues(alpha: 0.3),
-                  color: Colors.grey,
-                  tabs: const [
-                    GButton(
-                      icon: Icons.home_rounded,
-                      text: 'Home',
-                      iconActiveColor: Color(0xFF0891B2),
-                      textColor: Color(0xFF0891B2),
-                    ),
-                    GButton(
-                      icon: Icons.explore_rounded,
-                      text: 'Browse',
-                      iconActiveColor: Color(0xFF0891B2),
-                      textColor: Color(0xFF0891B2),
-                    ),
-                    GButton(
-                      icon: Icons.library_music_rounded,
-                      text: 'Library',
-                      iconActiveColor: Color(0xFF0891B2),
-                      textColor: Color(0xFF0891B2),
-                    ),
-                  ],
-                  selectedIndex: _currentIndex,
-                  onTabChange: (index) {
-                    setState(() {
-                      _currentIndex = index;
-                    });
-                  },
+          Builder(builder: (context) {
+            // (colors chosen below for the gradient and selected pill)
+
+            return SafeArea(
+              child: FluidNavBar(
+                icons: [
+                  FluidNavBarIcon(
+                    icon: Icons.home_rounded,
+                    selectedForegroundColor: Colors.white,
+                    unselectedForegroundColor: Colors.black,
+                    backgroundColor: const Color(0xFF00C6FF),
+                    extras: {"label": 'Home'},
+                  ),
+                  FluidNavBarIcon(
+                    icon: Icons.explore_rounded,
+                    selectedForegroundColor: Colors.white,
+                    unselectedForegroundColor: Colors.black,
+                    backgroundColor: const Color(0xFF00C6FF),
+                    extras: {"label": 'Browse'},
+                  ),
+                  FluidNavBarIcon(
+                    icon: Icons.library_music_rounded,
+                    selectedForegroundColor: Colors.white,
+                    unselectedForegroundColor: Colors.black,
+                    backgroundColor: const Color(0xFF00C6FF),
+                    extras: {"label": 'Library'},
+                  ),
+                ],
+                onChange: (index) => setState(() => _currentIndex = index),
+                defaultIndex: _currentIndex,
+                animationFactor: 0.95,
+                scaleFactor: 1.25,
+                style: FluidNavBarStyle(
+                  barBackgroundColor: const Color(0xFF00C6FF),
+                  iconBackgroundColor: const Color(0xFF00E5FF),
+                  iconSelectedForegroundColor: Colors.white,
+                  iconUnselectedForegroundColor: Colors.white70,
                 ),
               ),
-            ),
-          ),
+            );
+          }),
         ],
       ),
     );

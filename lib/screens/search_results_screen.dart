@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../theme/app_theme.dart';
 import '../widgets/media_card.dart';
 import '../providers/library_provider.dart';
 import '../providers/browser_provider.dart';
@@ -28,17 +27,19 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
-        backgroundColor: AppTheme.backgroundColor,
+        backgroundColor: theme.scaffoldBackgroundColor,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           'Search: "${widget.query}"',
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: theme.colorScheme.onSurface),
         ),
       ),
       body: SingleChildScrollView(
@@ -62,12 +63,12 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Local Songs',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: theme.colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -113,10 +114,10 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                 }
 
                 if (browserProvider.state == BrowserState.error) {
-                  return const Center(
+                  return Center(
                     child: Text(
                       'Failed to load online results',
-                      style: TextStyle(color: Colors.white54),
+                      style: TextStyle(color: theme.colorScheme.onSurface.withAlpha(138)),
                     ),
                   );
                 }
@@ -128,12 +129,12 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                 return Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Online Results',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: Colors.white,
+                        color: theme.colorScheme.onSurface,
                       ),
                     ),
                     const SizedBox(height: 16),

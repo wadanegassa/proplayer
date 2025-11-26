@@ -141,7 +141,8 @@ class AppTheme {
       contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
     ),
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
-      backgroundColor: lightSurfaceColor,
+      // make the bottom bar a bit darker in light mode for a stylish 'dim' look
+      backgroundColor: Color(0xFF0B1220),
       selectedItemColor: lightPrimaryColor,
       unselectedItemColor: Colors.grey,
       type: BottomNavigationBarType.fixed,
@@ -150,7 +151,8 @@ class AppTheme {
       elevation: 0,
     ),
     cardTheme: CardThemeData(
-      color: lightSurfaceColor,
+      // keep cards slightly dark even in light theme to preserve a modern, cinematic look
+      color: Color(0xFF0F172A),
       elevation: 2,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
@@ -160,7 +162,8 @@ class AppTheme {
   
   // Gradient presets for cool effects
   static const LinearGradient primaryGradient = LinearGradient(
-    colors: [primaryColor, secondaryColor],
+    // more vibrant gradient for a cooler UI
+    colors: [Color(0xFF7C3AED), Color(0xFF06B6D4)],
     begin: Alignment.topLeft,
     end: Alignment.bottomRight,
   );

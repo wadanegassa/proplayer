@@ -13,20 +13,21 @@ class MiniPlayer extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     final song = audioService.currentSong;
     if (song == null) return const SizedBox();
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+        child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(8),
-          color: const Color.fromARGB(255, 89, 0, 0),
-          boxShadow: const [
+          color: theme.cardColor,
+          boxShadow: [
             BoxShadow(
-              color: Color.fromARGB(80, 255, 99, 99),
+              color: theme.shadowColor.withAlpha((0.14 * 255).round()),
               blurRadius: 10,
-              offset: Offset(0, -3),
+              offset: const Offset(0, -3),
             ),
           ],
         ),
@@ -34,12 +35,12 @@ class MiniPlayer extends StatelessWidget {
 
         child: Row(
           children: [
-            const Icon(Icons.music_note, color: Colors.white),
+            Icon(Icons.music_note, color: theme.colorScheme.onSurface),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 song.title ?? 'Unknown',
-                style: const TextStyle(color: Colors.white),
+                style: TextStyle(color: theme.colorScheme.onSurface),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -49,9 +50,9 @@ class MiniPlayer extends StatelessWidget {
                 final isPlaying = snapshot.data ?? true;
                 return IconButton(
                   onPressed: () => audioService.togglePlayPause(),
-                  icon: Icon(
+                    icon: Icon(
                     isPlaying ? Icons.pause_circle : Icons.play_circle,
-                    color: Colors.white,
+                    color: theme.colorScheme.onSurface,
                     size: 32,
                   ),
                 );

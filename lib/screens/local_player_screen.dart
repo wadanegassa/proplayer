@@ -4,7 +4,7 @@ import 'package:just_audio/just_audio.dart';
 import 'dart:async';
 import 'package:provider/provider.dart';
 import '../models/media_item.dart';
-import '../theme/app_theme.dart';
+// removed app_theme import; using Theme.of(context)
 import '../providers/audio_player_provider.dart';
 
 class LocalPlayerScreen extends StatefulWidget {
@@ -137,7 +137,8 @@ class _LocalPlayerScreenState extends State<LocalPlayerScreen> {
         }
       });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Sleep timer set for $minutes minutes')),
+        // show number only (no 'minutes' suffix)
+        SnackBar(content: Text('Sleep timer set for $minutes')),
       );
     } else {
       _sleepTime = null;
@@ -166,8 +167,10 @@ class _LocalPlayerScreenState extends State<LocalPlayerScreen> {
   Widget build(BuildContext context) {
     final currentSong = widget.playlist[_currentIndex];
 
+    final theme = Theme.of(context);
+
     return Scaffold(
-      backgroundColor: AppTheme.backgroundColor,
+      backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -175,13 +178,13 @@ class _LocalPlayerScreenState extends State<LocalPlayerScreen> {
           icon: const Icon(CupertinoIcons.chevron_down),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text('Now Playing'),
+        title: Text('Now Playing', style: TextStyle(color: theme.colorScheme.onSurface)),
         centerTitle: true,
         actions: [
           IconButton(
             icon: Icon(
               _sleepTime != null ? CupertinoIcons.timer_fill : CupertinoIcons.timer,
-              color: _sleepTime != null ? AppTheme.primaryColor : Colors.white,
+              color: _sleepTime != null ? theme.colorScheme.primary : theme.colorScheme.onSurface,
             ),
             onPressed: () => _showSleepTimerDialog(),
           ),
@@ -200,10 +203,10 @@ class _LocalPlayerScreenState extends State<LocalPlayerScreen> {
                 height: 280,
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(24),
-                  color: AppTheme.surfaceColor,
+                  color: theme.cardColor,
                   boxShadow: [
                     BoxShadow(
-                      color: AppTheme.primaryColor.withValues(alpha: 0.3),
+                      color: theme.colorScheme.primary.withAlpha(77),
                       blurRadius: 30,
                       offset: const Offset(0, 10),
                     ),
@@ -217,10 +220,10 @@ class _LocalPlayerScreenState extends State<LocalPlayerScreen> {
                           fit: BoxFit.cover,
                         ),
                       )
-                    : const Icon(
+                    : Icon(
                         CupertinoIcons.music_note_2,
                         size: 100,
-                        color: Colors.white24,
+                        color: theme.colorScheme.onSurface.withAlpha(61),
                       ),
               ),
               const SizedBox(height: 40),
@@ -228,10 +231,10 @@ class _LocalPlayerScreenState extends State<LocalPlayerScreen> {
               // Song Info
               Text(
                 currentSong.title,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: theme.colorScheme.onSurface,
                 ),
                 textAlign: TextAlign.center,
                 maxLines: 2,
@@ -242,7 +245,7 @@ class _LocalPlayerScreenState extends State<LocalPlayerScreen> {
                 currentSong.subtitle,
                 style: TextStyle(
                   fontSize: 16,
-                  color: Colors.white.withValues(alpha: 0.6),
+                  color: theme.colorScheme.onSurface.withAlpha(153),
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -261,11 +264,11 @@ class _LocalPlayerScreenState extends State<LocalPlayerScreen> {
                         overlayRadius: 12,
                       ),
                     ),
-                    child: Slider(
+                      child: Slider(
                       value: _position.inSeconds.toDouble().clamp(0, _duration.inSeconds.toDouble()),
                       max: _duration.inSeconds.toDouble(),
-                      activeColor: AppTheme.primaryColor,
-                      inactiveColor: Colors.white24,
+                      activeColor: theme.colorScheme.primary,
+                      inactiveColor: theme.colorScheme.onSurface.withAlpha(61),
                       onChanged: (value) async {
                         await _audioPlayer.seek(Duration(seconds: value.toInt()));
                       },
@@ -279,13 +282,13 @@ class _LocalPlayerScreenState extends State<LocalPlayerScreen> {
                         Text(
                           _formatDuration(_position),
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.6),
+                            color: theme.colorScheme.onSurface.withAlpha(153),
                           ),
                         ),
                         Text(
                           _formatDuration(_duration),
                           style: TextStyle(
-                            color: Colors.white.withValues(alpha: 0.6),
+                            color: theme.colorScheme.onSurface.withAlpha(153),
                           ),
                         ),
                       ],
@@ -304,8 +307,8 @@ class _LocalPlayerScreenState extends State<LocalPlayerScreen> {
                     onPressed: _changeSpeed,
                     child: Text(
                       '${_playbackSpeed}x',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: theme.colorScheme.onSurface,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
@@ -313,7 +316,7 @@ class _LocalPlayerScreenState extends State<LocalPlayerScreen> {
                   IconButton(
                     icon: const Icon(CupertinoIcons.backward_fill),
                     iconSize: 32,
-                    color: _currentIndex > 0 ? Colors.white : Colors.white24,
+                    color: _currentIndex > 0 ? theme.colorScheme.onSurface : theme.colorScheme.onSurface.withAlpha(61),
                     onPressed: _currentIndex > 0 ? _playPrevious : null,
                   ),
                   Container(
@@ -321,12 +324,12 @@ class _LocalPlayerScreenState extends State<LocalPlayerScreen> {
                     height: 70,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: const LinearGradient(
-                        colors: [AppTheme.primaryColor, AppTheme.secondaryColor],
+                      gradient: LinearGradient(
+                        colors: [theme.colorScheme.primary, theme.colorScheme.secondary],
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: AppTheme.primaryColor.withValues(alpha: 0.4),
+                          color: theme.colorScheme.primary.withAlpha(102),
                           blurRadius: 20,
                           offset: const Offset(0, 5),
                         ),
@@ -339,7 +342,7 @@ class _LocalPlayerScreenState extends State<LocalPlayerScreen> {
                             : CupertinoIcons.play_fill,
                       ),
                       iconSize: 32,
-                      color: Colors.white,
+                      color: theme.colorScheme.onPrimary,
                       onPressed: _togglePlayPause,
                     ),
                   ),
@@ -347,15 +350,15 @@ class _LocalPlayerScreenState extends State<LocalPlayerScreen> {
                     icon: const Icon(CupertinoIcons.forward_fill),
                     iconSize: 32,
                     color: _currentIndex < widget.playlist.length - 1
-                        ? Colors.white
-                        : Colors.white24,
+                        ? theme.colorScheme.onSurface
+                        : theme.colorScheme.onSurface.withAlpha(61),
                     onPressed: _currentIndex < widget.playlist.length - 1
                         ? _playNext
                         : null,
                   ),
                   IconButton(
                     icon: const Icon(CupertinoIcons.heart),
-                    color: Colors.white,
+                    color: theme.colorScheme.onSurface,
                     onPressed: () {
                       // Favorite logic
                     },
@@ -373,7 +376,7 @@ class _LocalPlayerScreenState extends State<LocalPlayerScreen> {
   void _showSleepTimerDialog() {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.surfaceColor,
+      backgroundColor: Theme.of(context).cardColor,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -383,12 +386,12 @@ class _LocalPlayerScreenState extends State<LocalPlayerScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text(
+              Text(
                 'Sleep Timer',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: Colors.white,
+                  color: Theme.of(context).colorScheme.onSurface,
                 ),
               ),
               const SizedBox(height: 20),
@@ -397,10 +400,10 @@ class _LocalPlayerScreenState extends State<LocalPlayerScreen> {
                 runSpacing: 10,
                 children: [
                   _buildTimerOption(0, 'Off'),
-                  _buildTimerOption(15, '15 min'),
-                  _buildTimerOption(30, '30 min'),
-                  _buildTimerOption(45, '45 min'),
-                  _buildTimerOption(60, '1 hour'),
+                  _buildTimerOption(15, '15'),
+                  _buildTimerOption(30, '30'),
+                  _buildTimerOption(45, '45'),
+                  _buildTimerOption(60, '60'),
                 ],
               ),
             ],
@@ -417,11 +420,8 @@ class _LocalPlayerScreenState extends State<LocalPlayerScreen> {
             _sleepTime!.difference(DateTime.now()).inMinutes <= minutes + 1);
 
     return ActionChip(
-      label: Text(label),
-      backgroundColor: isSelected ? AppTheme.primaryColor : Colors.white10,
-      labelStyle: TextStyle(
-        color: isSelected ? Colors.white : Colors.white70,
-      ),
+      label: Text(label, style: TextStyle(color: isSelected ? Theme.of(context).colorScheme.onPrimary : Theme.of(context).colorScheme.onSurface.withAlpha(179))),
+      backgroundColor: isSelected ? Theme.of(context).colorScheme.primary : Theme.of(context).colorScheme.onSurface.withAlpha(26),
       onPressed: () {
         _setSleepTimer(minutes);
         Navigator.pop(context);

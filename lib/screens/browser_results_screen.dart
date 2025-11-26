@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../theme/app_theme.dart';
+// removed app_theme import; using Theme.of(context)
 import '../widgets/media_card.dart';
 import '../providers/browser_provider.dart';
 import 'video_player_screen.dart';
@@ -26,20 +26,22 @@ class _BrowserResultsScreenState extends State<BrowserResultsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: AppTheme.backgroundColor,
+        backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? theme.scaffoldBackgroundColor,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white),
+          icon: Icon(Icons.arrow_back, color: Theme.of(context).appBarTheme.foregroundColor ?? theme.colorScheme.onPrimary),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           widget.category,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor ?? theme.colorScheme.onPrimary),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.refresh, color: Colors.white),
+            icon: Icon(Icons.refresh, color: Theme.of(context).appBarTheme.foregroundColor ?? theme.colorScheme.onPrimary),
             onPressed: () {
               Provider.of<BrowserProvider>(context, listen: false)
                   .fetchCategory(widget.category);
@@ -53,15 +55,14 @@ class _BrowserResultsScreenState extends State<BrowserResultsScreen> {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (provider.state == BrowserState.error) {
+            if (provider.state == BrowserState.error) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Icon(Icons.error_outline, color: Colors.red, size: 48),
+                  Icon(Icons.error_outline, color: Colors.red, size: 48),
                   const SizedBox(height: 16),
-                  const Text('Failed to load videos',
-                      style: TextStyle(color: Colors.white)),
+                  Text('Failed to load videos', style: TextStyle(color: theme.colorScheme.onSurface.withAlpha(179))),
                   const SizedBox(height: 16),
                   ElevatedButton(
                     onPressed: () => provider.fetchCategory(widget.category),

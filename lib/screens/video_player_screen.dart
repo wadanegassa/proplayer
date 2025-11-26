@@ -6,7 +6,7 @@ import 'dart:io';
 import 'dart:async';
 import '../models/media_item.dart';
 import '../providers/home_provider.dart';
-import '../theme/app_theme.dart';
+// app_theme removed; use Theme.of(context)
 
 class VideoPlayerScreen extends StatefulWidget {
   final MediaItem mediaItem;
@@ -79,8 +79,11 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    // Force a dark background for the video player so it remains black even in light theme
+    const backgroundColor = Colors.black;
+
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: backgroundColor,
       body: GestureDetector(
         onTap: _toggleControls,
         onDoubleTapDown: (details) {
@@ -133,11 +136,11 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
           children: [
             Icon(forward ? Icons.fast_forward : Icons.fast_rewind, color: Colors.white),
             const SizedBox(width: 8),
-            Text(forward ? '+10s' : '-10s'),
+            Text(forward ? '+10s' : '-10s', style: TextStyle(color: Colors.white)),
           ],
         ),
         duration: const Duration(milliseconds: 500),
-        backgroundColor: Colors.black54,
+        backgroundColor: Colors.black.withAlpha(160),
         behavior: SnackBarBehavior.floating,
         width: 100,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
@@ -146,18 +149,19 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   }
 
   Widget _buildYouTubePlayer() {
+    final theme = Theme.of(context);
     if (_youtubeController == null) {
       return const CircularProgressIndicator();
     }
     return YoutubePlayer(
       controller: _youtubeController!,
       showVideoProgressIndicator: true,
-      progressIndicatorColor: AppTheme.primaryColor,
+      progressIndicatorColor: theme.colorScheme.primary,
       bottomActions: [
         CurrentPosition(),
-        ProgressBar(isExpanded: true, colors: const ProgressBarColors(
-          playedColor: AppTheme.primaryColor,
-          handleColor: AppTheme.primaryColor,
+        ProgressBar(isExpanded: true, colors: ProgressBarColors(
+          playedColor: theme.colorScheme.primary,
+          handleColor: theme.colorScheme.primary,
         )),
         RemainingDuration(),
         const PlaybackSpeedButton(),
@@ -167,8 +171,10 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   }
 
   Widget _buildLocalVideoPlayer() {
+    final theme = Theme.of(context);
+
     if (_localController == null || !_localController!.value.isInitialized) {
-      return const CircularProgressIndicator(color: AppTheme.primaryColor);
+      return CircularProgressIndicator(color: theme.colorScheme.primary);
     }
     return AspectRatio(
       aspectRatio: _localController!.value.aspectRatio,
@@ -177,10 +183,13 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   }
 
   Widget _buildOverlayControls() {
+    final theme = Theme.of(context);
+
+    // Overlay dark gradient so controls are visible on top of the black video background
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.black54, Colors.transparent, Colors.black54],
+          colors: [Colors.black.withAlpha(200), Colors.transparent, Colors.black.withAlpha(200)],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
@@ -221,13 +230,13 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                   const SizedBox(width: 20),
                   Container(
                     decoration: BoxDecoration(
-                      color: AppTheme.primaryColor.withValues(alpha: 0.8),
+                      color: theme.colorScheme.primary.withAlpha(204),
                       shape: BoxShape.circle,
                     ),
                     child: IconButton(
                       icon: Icon(
                         _localController!.value.isPlaying ? Icons.pause : Icons.play_arrow,
-                        color: Colors.white,
+                        color: theme.colorScheme.onPrimary,
                         size: 40,
                       ),
                       onPressed: () {
@@ -256,9 +265,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                   _localController!,
                   allowScrubbing: true,
                   colors: vp.VideoProgressColors(
-                    playedColor: AppTheme.primaryColor,
-                    bufferedColor: Colors.white24,
-                    backgroundColor: Colors.white10,
+                    playedColor: theme.colorScheme.primary,
+                    bufferedColor: Colors.white.withAlpha(90),
+                    backgroundColor: Colors.white.withAlpha(24),
                   ),
                 ),
               ),
