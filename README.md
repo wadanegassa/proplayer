@@ -17,11 +17,13 @@ The app combines a simple, clean interface with smooth playback controls and org
     <td><img src="assets/screenshot1.jpg" width="250" /></td>
     <td><img src="assets/screenshot2.jpg" width="250" /></td>
     <td><img src="sassets/screenshot3.jpg" width="250" /></td>
+     <td><img src="sassets/screenshots4.jpg" width="250" /></td>
   </tr>
   <tr>
-    <td><img src="screenshots/player.jpg" width="250" /></td>
-    <td><img src="screenshots/settings.jpg" width="250" /></td>
-    <td><img src="screenshots/search.jpg" width="250" /></td>
+     <td><img src="sassets/screenshot5.jpg" width="250" /></td>
+     <td><img src="sassets/screenshot6.jpg" width="250" /></td>
+     <td><img src="sassets/screenshot7.jpg" width="250" /></td>
+     <td><img src="sassets/screenshot8.jpg" width="250" /></td>
   </tr>
 </table>
 
