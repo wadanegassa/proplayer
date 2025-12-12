@@ -22,22 +22,16 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
   void initState() {
     super.initState();
 
-    // Listen to position updates to update the slider
     _positionSub = widget.audioService.player.positionStream.listen((pos) {
       final duration =
           widget.audioService.player.duration ?? Duration(seconds: 1);
       setState(() {
-        progress = (pos.inMilliseconds / duration.inMilliseconds).clamp(
-          0.0,
-          1.0,
-        );
+        progress = (pos.inMilliseconds / duration.inMilliseconds).clamp(0.0, 1.0);
       });
     });
 
-    // Listen to player state (to auto play next song when finished)
-    _playerStateSub = widget.audioService.player.playerStateStream.listen((
-      state,
-    ) {
+    _playerStateSub =
+        widget.audioService.player.playerStateStream.listen((state) {
       setState(() {
         isPlaying = widget.audioService.player.playing;
       });
@@ -73,14 +67,14 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
     final song = widget.audioService.currentSong;
     if (song == null) return const SizedBox();
 
-  final theme = Theme.of(context);
+    final theme = Theme.of(context);
 
-  return DraggableScrollableSheet(
-      expand: false,
-      initialChildSize: 0.9,
-      minChildSize: 0.5,
+    return DraggableScrollableSheet(
+      expand: true,
+      initialChildSize: 0.3,
+      minChildSize: 0.3,
       maxChildSize: 1.0,
-      builder: (_, controller) => Container(
+      builder: (_, __) => Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color.fromARGB(255, 122, 0, 0), Color(0xFF180041)],
@@ -89,7 +83,9 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
           ),
           borderRadius: BorderRadius.vertical(top: Radius.circular(25)),
         ),
+        padding: const EdgeInsets.symmetric(horizontal: 25),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           children: [
             // Drag handle
             Container(
@@ -104,7 +100,7 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
 
             const SizedBox(height: 15),
 
-            // Music artwork placeholder
+            // Music artwork
             Container(
               height: 250,
               width: 250,
@@ -142,7 +138,8 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
             const SizedBox(height: 8),
             Text(
               "Unknown Artist",
-              style: TextStyle(color: theme.colorScheme.onSurface.withAlpha(179)),
+              style:
+                  TextStyle(color: theme.colorScheme.onSurface.withAlpha(179)),
             ),
 
             const SizedBox(height: 20),
@@ -157,7 +154,8 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
                     min: 0,
                     max: 1,
                     activeColor: theme.colorScheme.primary,
-                    inactiveColor: theme.colorScheme.onSurface.withAlpha(61),
+                    inactiveColor:
+                        theme.colorScheme.onSurface.withAlpha(61),
                     onChanged: (value) async {
                       final duration = widget.audioService.player.duration;
                       if (duration != null) {
@@ -170,14 +168,16 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Text(
-                        _formatDuration(widget.audioService.player.position),
-                        style: TextStyle(color: theme.colorScheme.onSurface.withAlpha(179)),
+                        _formatDuration(
+                            widget.audioService.player.position),
+                        style: TextStyle(
+                            color: theme.colorScheme.onSurface.withAlpha(179)),
                       ),
                       Text(
-                        _formatDuration(
-                          widget.audioService.player.duration ?? Duration.zero,
-                        ),
-                        style: TextStyle(color: theme.colorScheme.onSurface.withAlpha(179)),
+                        _formatDuration(widget.audioService.player.duration ??
+                            Duration.zero),
+                        style: TextStyle(
+                            color: theme.colorScheme.onSurface.withAlpha(179)),
                       ),
                     ],
                   ),
@@ -242,10 +242,14 @@ class _PlayMusicScreenState extends State<PlayMusicScreen> {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                Icon(Icons.shuffle, color: theme.colorScheme.onSurface.withAlpha(179)),
-                Icon(Icons.favorite_border, color: theme.colorScheme.onSurface.withAlpha(179)),
-                Icon(Icons.repeat, color: theme.colorScheme.onSurface.withAlpha(179)),
-                Icon(Icons.queue_music, color: theme.colorScheme.onSurface.withAlpha(179)),
+                Icon(Icons.shuffle,
+                    color: theme.colorScheme.onSurface.withAlpha(179)),
+                Icon(Icons.favorite_border,
+                    color: theme.colorScheme.onSurface.withAlpha(179)),
+                Icon(Icons.repeat,
+                    color: theme.colorScheme.onSurface.withAlpha(179)),
+                Icon(Icons.queue_music,
+                    color: theme.colorScheme.onSurface.withAlpha(179)),
               ],
             ),
 

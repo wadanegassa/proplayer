@@ -41,8 +41,8 @@ class MiniPlayer extends StatelessWidget {
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 colors: [
-                  theme.colorScheme.primary.withAlpha(230),
-                  theme.colorScheme.secondary.withAlpha(230),
+                  theme.colorScheme.primary.withAlpha(300),
+                  theme.colorScheme.secondary.withAlpha(300),
                 ],
               ),
               boxShadow: [

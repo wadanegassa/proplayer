@@ -30,18 +30,18 @@ class _BrowserResultsScreenState extends State<BrowserResultsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: Theme.of(context).appBarTheme.backgroundColor ?? theme.scaffoldBackgroundColor,
+        backgroundColor: theme.appBarTheme.backgroundColor,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: Theme.of(context).appBarTheme.foregroundColor ?? theme.colorScheme.onPrimary),
+          icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
           widget.category,
-          style: TextStyle(color: Theme.of(context).appBarTheme.foregroundColor ?? theme.colorScheme.onPrimary),
+          style: theme.appBarTheme.titleTextStyle,
         ),
         actions: [
           IconButton(
-            icon: Icon(Icons.refresh, color: Theme.of(context).appBarTheme.foregroundColor ?? theme.colorScheme.onPrimary),
+            icon: const Icon(Icons.refresh),
             onPressed: () {
               Provider.of<BrowserProvider>(context, listen: false)
                   .fetchCategory(widget.category);
