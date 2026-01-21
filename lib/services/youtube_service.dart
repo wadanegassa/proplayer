@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'package:flutter/foundation.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 import '../models/media_item.dart';
 
@@ -32,7 +33,7 @@ class YouTubeService {
       final searchList = await _yt.search.search(query);
       return searchList.map(_toMediaItem).toList();
     } catch (e) {
-      print('Error searching videos: $e');
+      debugPrint('Error searching videos: $e');
       return [];
     }
   }
@@ -81,7 +82,7 @@ class YouTubeService {
       all.shuffle(_random);
       return all.take(20).toList();
     } catch (e) {
-      print('Error fetching random mix: $e');
+      debugPrint('Error fetching random mix: $e');
       return [];
     }
   }

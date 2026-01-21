@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:video_player/video_player.dart' as vp;
 import 'package:provider/provider.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'dart:io';
 import 'dart:async';
 import '../models/media_item.dart';
@@ -79,26 +80,17 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Force a dark background for the video player so it remains black even in light theme
-    const backgroundColor = Colors.black;
-
     return Scaffold(
-      backgroundColor: backgroundColor,
+      backgroundColor: Colors.black,
       body: GestureDetector(
         onTap: _toggleControls,
         onDoubleTapDown: (details) {
           final width = MediaQuery.of(context).size.width;
           if (details.globalPosition.dx < width / 2) {
-            // Seek backward 10s
             _seekRelative(-10);
           } else {
-            // Seek forward 10s
             _seekRelative(10);
           }
-        },
-        onVerticalDragUpdate: (details) {
-          // Simple volume/brightness simulation
-          // In a real app, use system_setting or screen_brightness packages
         },
         child: Stack(
           alignment: Alignment.center,
@@ -127,23 +119,22 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   }
 
   void _showSeekFeedback(bool forward) {
-    // Show temporary icon overlay
     ScaffoldMessenger.of(context).clearSnackBars();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(forward ? Icons.fast_forward : Icons.fast_rewind, color: Colors.white),
+            Icon(forward ? Icons.fast_forward_rounded : Icons.fast_rewind_rounded, color: Colors.white),
             const SizedBox(width: 8),
-            Text(forward ? '+10s' : '-10s', style: TextStyle(color: Colors.white)),
+            Text(forward ? '+10s' : '-10s', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ],
         ),
         duration: const Duration(milliseconds: 500),
-        backgroundColor: Colors.black.withAlpha(160),
+        backgroundColor: Colors.black.withValues(alpha: 0.6),
         behavior: SnackBarBehavior.floating,
-        width: 100,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        width: 120,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(32)),
       ),
     );
   }
@@ -159,10 +150,15 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       progressIndicatorColor: theme.colorScheme.primary,
       bottomActions: [
         CurrentPosition(),
-        ProgressBar(isExpanded: true, colors: ProgressBarColors(
-          playedColor: theme.colorScheme.primary,
-          handleColor: theme.colorScheme.primary,
-        )),
+        ProgressBar(
+          isExpanded: true,
+          colors: ProgressBarColors(
+            playedColor: theme.colorScheme.primary,
+            handleColor: theme.colorScheme.primary,
+            bufferedColor: Colors.white.withValues(alpha: 0.3),
+            backgroundColor: Colors.white.withValues(alpha: 0.1),
+          ),
+        ),
         RemainingDuration(),
         const PlaybackSpeedButton(),
         FullScreenButton(),
@@ -185,11 +181,14 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   Widget _buildOverlayControls() {
     final theme = Theme.of(context);
 
-    // Overlay dark gradient so controls are visible on top of the black video background
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
-          colors: [Colors.black.withAlpha(200), Colors.transparent, Colors.black.withAlpha(200)],
+          colors: [
+            Colors.black.withValues(alpha: 0.7),
+            Colors.transparent,
+            Colors.black.withValues(alpha: 0.7),
+          ],
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
         ),
@@ -198,82 +197,171 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         child: Column(
           children: [
             // Top Bar
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              child: Row(
+                children: [
+                  IconButton(
+                    icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.white, size: 32),
+                    onPressed: () => Navigator.pop(context),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          widget.mediaItem.title,
+                          style: GoogleFonts.outfit(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        Text(
+                          widget.mediaItem.subtitle,
+                          style: GoogleFonts.outfit(
+                            color: Colors.white.withValues(alpha: 0.6),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.more_vert_rounded, color: Colors.white),
+                    onPressed: () {},
+                  ),
+                ],
+              ),
+            ),
+            const Spacer(),
+            // Center Controls
             Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 IconButton(
-                  icon: const Icon(Icons.arrow_back, color: Colors.white),
-                  onPressed: () => Navigator.pop(context),
+                  icon: const Icon(Icons.replay_10_rounded, color: Colors.white, size: 40),
+                  onPressed: () => _seekRelative(-10),
                 ),
-                Expanded(
-                  child: Text(
-                    widget.mediaItem.title,
-                    style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                    overflow: TextOverflow.ellipsis,
+                const SizedBox(width: 32),
+                GestureDetector(
+                  onTap: () {
+                    setState(() {
+                      if (_isLocalVideo) {
+                        _localController!.value.isPlaying
+                            ? _localController!.pause()
+                            : _localController!.play();
+                      } else {
+                        _youtubeController!.value.isPlaying
+                            ? _youtubeController!.pause()
+                            : _youtubeController!.play();
+                      }
+                      _startHideTimer();
+                    });
+                  },
+                  child: Container(
+                    height: 80,
+                    width: 80,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: theme.colorScheme.primary.withValues(alpha: 0.9),
+                      boxShadow: [
+                        BoxShadow(
+                          color: theme.colorScheme.primary.withValues(alpha: 0.4),
+                          blurRadius: 20,
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      (_isLocalVideo ? _localController!.value.isPlaying : _youtubeController!.value.isPlaying)
+                          ? Icons.pause_rounded
+                          : Icons.play_arrow_rounded,
+                      color: Colors.white,
+                      size: 48,
+                    ),
                   ),
                 ),
+                const SizedBox(width: 32),
                 IconButton(
-                  icon: const Icon(Icons.more_vert, color: Colors.white),
-                  onPressed: () {},
+                  icon: const Icon(Icons.forward_10_rounded, color: Colors.white, size: 40),
+                  onPressed: () => _seekRelative(10),
                 ),
               ],
             ),
             const Spacer(),
-            // Center Play/Pause (only for local, YouTube has its own)
+            // Bottom Controls
             if (_isLocalVideo)
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  children: [
+                    vp.VideoProgressIndicator(
+                      _localController!,
+                      allowScrubbing: true,
+                      colors: vp.VideoProgressColors(
+                        playedColor: theme.colorScheme.primary,
+                        bufferedColor: Colors.white.withValues(alpha: 0.3),
+                        backgroundColor: Colors.white.withValues(alpha: 0.1),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        ValueListenableBuilder(
+                          valueListenable: _localController!,
+                          builder: (context, vp.VideoPlayerValue value, child) {
+                            return Text(
+                              _formatDuration(value.position),
+                              style: const TextStyle(color: Colors.white70, fontSize: 12),
+                            );
+                          },
+                        ),
+                        Text(
+                          _formatDuration(_localController!.value.duration),
+                          style: const TextStyle(color: Colors.white70, fontSize: 12),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 16),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
                   IconButton(
-                    icon: const Icon(Icons.replay_10, color: Colors.white, size: 32),
-                    onPressed: () => _seekRelative(-10),
+                    icon: const Icon(Icons.shuffle_rounded, color: Colors.white70),
+                    onPressed: () {},
                   ),
-                  const SizedBox(width: 20),
-                  Container(
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withAlpha(204),
-                      shape: BoxShape.circle,
-                    ),
-                    child: IconButton(
-                      icon: Icon(
-                        _localController!.value.isPlaying ? Icons.pause : Icons.play_arrow,
-                        color: theme.colorScheme.onPrimary,
-                        size: 40,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _localController!.value.isPlaying
-                              ? _localController!.pause()
-                              : _localController!.play();
-                          _startHideTimer();
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(width: 20),
                   IconButton(
-                    icon: const Icon(Icons.forward_10, color: Colors.white, size: 32),
-                    onPressed: () => _seekRelative(10),
+                    icon: const Icon(Icons.favorite_border_rounded, color: Colors.white70),
+                    onPressed: () {},
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.repeat_rounded, color: Colors.white70),
+                    onPressed: () {},
+                  ),
+                  IconButton(
+                    icon: const Icon(Icons.playlist_play_rounded, color: Colors.white70),
+                    onPressed: () {},
                   ),
                 ],
               ),
-            const Spacer(),
-            // Bottom Bar (only for local)
-            if (_isLocalVideo)
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: vp.VideoProgressIndicator(
-                  _localController!,
-                  allowScrubbing: true,
-                  colors: vp.VideoProgressColors(
-                    playedColor: theme.colorScheme.primary,
-                    bufferedColor: Colors.white.withAlpha(90),
-                    backgroundColor: Colors.white.withAlpha(24),
-                  ),
-                ),
-              ),
+            ),
           ],
         ),
       ),
     );
+  }
+
+  String _formatDuration(Duration duration) {
+    String twoDigits(int n) => n.toString().padLeft(2, '0');
+    final minutes = twoDigits(duration.inMinutes.remainder(60));
+    final seconds = twoDigits(duration.inSeconds.remainder(60));
+    return '$minutes:$seconds';
   }
 }
