@@ -44,11 +44,11 @@ class _MediaCardState extends State<MediaCard> with SingleTickerProviderStateMix
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: const Duration(milliseconds: 150),
+      duration: const Duration(milliseconds: 180),
       vsync: this,
     );
-    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.95).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut),
+    _scaleAnimation = Tween<double>(begin: 1.0, end: 0.96).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOutCubic),
     );
   }
 
@@ -60,31 +60,30 @@ class _MediaCardState extends State<MediaCard> with SingleTickerProviderStateMix
 
   @override
   Widget build(BuildContext context) {
-    // Responsive sizing based on screen width
-    final screenWidth = MediaQuery.of(context).size.width;
-    
+    final screenWidth = MediaQuery.sizeOf(context).width;
+
     double? cardWidth;
     double? cardHeight;
 
     if (widget.useDynamicSizing) {
-      cardWidth = widget.width ?? (screenWidth < 600 ? 160.0 : 200.0);
-      cardHeight = widget.height ?? (screenWidth < 600 ? 140.0 : 180.0);
+      cardWidth = widget.width ?? (screenWidth < 600 ? 158.0 : 196.0);
+      cardHeight = widget.height ?? (screenWidth < 600 ? 142.0 : 172.0);
     } else {
       cardWidth = widget.width;
       cardHeight = widget.height;
     }
 
-  ImageProvider? imageProvider;
+    ImageProvider? imageProvider;
     if (widget.thumbnailBytes != null) {
       imageProvider = MemoryImage(widget.thumbnailBytes!);
     } else if (widget.imageUrl != null) {
       imageProvider = NetworkImage(widget.imageUrl!);
     }
 
-  final theme = Theme.of(context);
-  final isLight = theme.brightness == Brightness.light;
+    final theme = Theme.of(context);
+    final radius = 20.0;
 
-  return GestureDetector(
+    return GestureDetector(
       onTapDown: (_) {
         setState(() => _isPressed = true);
         _controller.forward();
@@ -112,126 +111,139 @@ class _MediaCardState extends State<MediaCard> with SingleTickerProviderStateMix
                 children: [
                   Stack(
                     children: [
-                      // Card with gradient border effect
                       if (cardWidth != null && cardHeight != null)
                         Container(
                           height: cardHeight,
                           width: cardWidth,
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(16),
-                            gradient: _isPressed
-                                ? AppTheme.primaryGradient
-                                : null,
+                            borderRadius: BorderRadius.circular(radius),
                             boxShadow: [
                               BoxShadow(
-                                color: theme.colorScheme.primary.withAlpha((0.14 * 255).round()),
-                                blurRadius: 12,
-                                offset: const Offset(0, 4),
+                                color: theme.colorScheme.primary.withValues(alpha: 0.12),
+                                blurRadius: 20,
+                                offset: const Offset(0, 10),
+                              ),
+                              BoxShadow(
+                                color: Colors.black.withValues(
+                                  alpha: theme.brightness == Brightness.dark ? 0.25 : 0.06,
+                                ),
+                                blurRadius: 16,
+                                offset: const Offset(0, 6),
                               ),
                             ],
+                            border: Border.all(
+                              color: theme.colorScheme.outline.withValues(alpha: 0.12),
+                            ),
                           ),
-                          child: _buildImageContent(imageProvider),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(radius - 1),
+                            child: Stack(
+                              fit: StackFit.expand,
+                              children: [
+                                _buildImageContent(imageProvider, theme, radius - 1),
+                                Positioned(
+                                  left: 0,
+                                  right: 0,
+                                  top: 0,
+                                  height: (cardHeight) * 0.38,
+                                  child: DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          Colors.white.withValues(alpha: 0.22),
+                                          Colors.transparent,
+                                        ],
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                                if (_isPressed)
+                                  DecoratedBox(
+                                    decoration: BoxDecoration(
+                                      color: theme.colorScheme.primary.withValues(alpha: 0.14),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
                         )
                       else
                         AspectRatio(
                           aspectRatio: 1.0,
-                          child: Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(16),
-                              gradient: _isPressed
-                                  ? AppTheme.primaryGradient
-                                  : null,
-                              boxShadow: [
-                                BoxShadow(
-                                  color: theme.colorScheme.primary.withAlpha((0.14 * 255).round()),
-                                  blurRadius: 12,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: _buildImageContent(imageProvider),
+                          child: ClipRRect(
+                            borderRadius: BorderRadius.circular(radius),
+                            child: _buildImageContent(imageProvider, theme, radius),
                           ),
                         ),
-                      // Duration badge
                       if (widget.duration != null)
                         Positioned(
-                          top: 6,
-                          right: 6,
+                          top: 10,
+                          right: 10,
                           child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 6,
-                              vertical: 3,
-                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                             decoration: BoxDecoration(
-                              // Force badge background: black in light mode, white in dark mode
-                              color: isLight ? Colors.black : Colors.white,
-                              borderRadius: BorderRadius.circular(6),
-                              border: Border.all(
-                                color: theme.colorScheme.onSurface.withAlpha((0.06 * 255).round()),
-                                width: 1,
-                              ),
+                              color: Colors.black.withValues(alpha: 0.72),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: Colors.white24),
                             ),
                             child: Text(
                               widget.duration!,
-                              style: TextStyle(
-                                // Ensure readable text: white on black, black on white
-                                color: isLight ? Colors.white : Colors.black,
-                                fontSize: 10,
-                                fontWeight: FontWeight.w600,
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w700,
                               ),
                             ),
                           ),
                         ),
-                      // YouTube / play icon badge (only for videos)
                       if (widget.showYouTubeIcon && widget.isVideo)
                         Positioned(
-                          bottom: 6,
-                          right: 6,
+                          bottom: 10,
+                          right: 10,
                           child: Container(
-                            padding: const EdgeInsets.all(5),
+                            padding: const EdgeInsets.all(7),
                             decoration: BoxDecoration(
-                              color: theme.colorScheme.secondary,
-                              borderRadius: BorderRadius.circular(6),
+                              gradient: AppTheme.accentGradient,
+                              borderRadius: BorderRadius.circular(10),
                               boxShadow: [
                                 BoxShadow(
-                                  color: theme.colorScheme.secondary.withAlpha((0.28 * 255).round()),
-                                  blurRadius: 8,
-                                  offset: const Offset(0, 2),
+                                  color: theme.colorScheme.primary.withValues(alpha: 0.4),
+                                  blurRadius: 10,
+                                  offset: const Offset(0, 4),
                                 ),
                               ],
                             ),
                             child: Icon(
                               Icons.play_arrow_rounded,
-                              color: theme.colorScheme.onSecondary,
-                              size: 12,
+                              color: theme.colorScheme.onPrimary,
+                              size: 14,
                             ),
                           ),
                         ),
                     ],
                   ),
-                  const SizedBox(height: 6),
-                  // Title
+                  const SizedBox(height: 10),
                   Text(
                     widget.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      height: 1.2,
+                    style: theme.textTheme.titleSmall?.copyWith(
+                      fontWeight: FontWeight.w700,
+                      letterSpacing: -0.2,
+                      fontSize: 14,
                     ),
                   ),
                   const SizedBox(height: 2),
-                  // Subtitle
                   Text(
                     widget.subtitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: theme.textTheme.bodySmall?.copyWith(
-                      color: theme.textTheme.bodySmall?.color?.withAlpha((0.72 * 255).round()),
-                      fontSize: 11,
-                      fontWeight: FontWeight.w400,
-                      height: 1.2,
+                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ],
@@ -243,34 +255,26 @@ class _MediaCardState extends State<MediaCard> with SingleTickerProviderStateMix
     );
   }
 
-  Widget _buildImageContent(ImageProvider? imageProvider) {
-    final theme = Theme.of(context);
-    // Use a ClipRRect + Image (with BoxFit.cover) so the image fully fills
-    // the available area and is correctly clipped to the card radius.
+  Widget _buildImageContent(ImageProvider? imageProvider, ThemeData theme, double radius) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        // fill the parent area (parent container provides fixed height/width)
-        color: theme.cardColor,
+      borderRadius: BorderRadius.circular(radius),
+      child: ColoredBox(
+        color: theme.colorScheme.surfaceContainerHighest,
         child: imageProvider != null
-            ? SizedBox.expand(
-                child: Image(
-                  image: imageProvider,
-                  fit: BoxFit.cover,
-                  width: double.infinity,
-                  height: double.infinity,
-                  alignment: Alignment.center,
-                ),
+            ? Image(
+                image: imageProvider,
+                fit: BoxFit.cover,
+                width: double.infinity,
+                height: double.infinity,
               )
             : Center(
                 child: ShaderMask(
-                  shaderCallback: (bounds) {
-                    return AppTheme.primaryGradient.createShader(bounds);
-                  },
+                  shaderCallback: (bounds) =>
+                      AppTheme.accentGradient.createShader(bounds),
                   child: Icon(
                     widget.isVideo ? Icons.movie_rounded : Icons.music_note_rounded,
-                    size: 56,
-                    color: theme.colorScheme.onPrimary,
+                    size: 52,
+                    color: Colors.white,
                   ),
                 ),
               ),

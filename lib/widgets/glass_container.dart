@@ -14,9 +14,9 @@ class GlassContainer extends StatelessWidget {
   const GlassContainer({
     super.key,
     required this.child,
-    this.borderRadius = 16,
-    this.blur = 10,
-    this.opacity = 0.08,
+    this.borderRadius = 20,
+    this.blur = 18,
+    this.opacity = 0.12,
     this.color,
     this.padding,
     this.margin,
@@ -26,10 +26,12 @@ class GlassContainer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final bgColor = color ?? theme.colorScheme.onSurface;
-    final borderColor = (border != null)
-        ? null
-  : theme.colorScheme.onSurface.withAlpha((0.06 * 255).round());
+    final base = color ?? theme.colorScheme.surface;
+    final borderSide = border ??
+        Border.all(
+          color: theme.colorScheme.outline.withValues(alpha: theme.brightness == Brightness.dark ? 0.18 : 0.22),
+          width: 1,
+        );
 
     return Container(
       margin: margin,
@@ -40,13 +42,16 @@ class GlassContainer extends StatelessWidget {
           child: Container(
             padding: padding,
             decoration: BoxDecoration(
-              color: bgColor.withAlpha((opacity * 255).round()),
               borderRadius: BorderRadius.circular(borderRadius),
-              border: border ??
-                  Border.all(
-                    color: borderColor ?? Colors.transparent,
-                    width: 1,
-                  ),
+              color: base.withValues(alpha: opacity.clamp(0.0, 1.0)),
+              border: borderSide,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: theme.brightness == Brightness.dark ? 0.2 : 0.06),
+                  blurRadius: 24,
+                  offset: const Offset(0, 10),
+                ),
+              ],
             ),
             child: child,
           ),

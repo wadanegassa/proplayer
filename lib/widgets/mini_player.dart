@@ -1,10 +1,11 @@
 import 'dart:ui';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../providers/audio_player_provider.dart';
 import '../screens/local_player_screen.dart';
+import '../theme/app_theme.dart';
 
 class MiniPlayer extends StatelessWidget {
   const MiniPlayer({super.key});
@@ -34,170 +35,158 @@ class MiniPlayer extends StatelessWidget {
                 ),
               ),
             ).then((_) {
-              // When returning from full player, set to minimized
               playerProvider.setMinimized(true);
             });
           },
           child: Container(
-            margin: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            height: 72,
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 10),
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(26),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.2),
+                  color: theme.colorScheme.primary.withValues(alpha: isDark ? 0.25 : 0.18),
+                  blurRadius: 24,
+                  offset: const Offset(0, 10),
+                ),
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: isDark ? 0.35 : 0.08),
                   blurRadius: 20,
                   offset: const Offset(0, 8),
                 ),
               ],
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(26),
               child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
-                child: Container(
+                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                child: DecoratedBox(
                   decoration: BoxDecoration(
-                    color: isDark 
-                        ? const Color(0xFF1E1B4B).withValues(alpha: 0.85) 
-                        : Colors.white.withValues(alpha: 0.9),
-                    borderRadius: BorderRadius.circular(20),
                     border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      width: 1,
+                      color: theme.colorScheme.outline.withValues(alpha: 0.22),
+                    ),
+                    gradient: LinearGradient(
+                      colors: isDark
+                          ? [
+                              theme.colorScheme.surface.withValues(alpha: 0.88),
+                              theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.72),
+                            ]
+                          : [
+                              Colors.white.withValues(alpha: 0.94),
+                              Colors.white.withValues(alpha: 0.82),
+                            ],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
                     ),
                   ),
                   child: Column(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
-                      Expanded(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 12),
-                          child: Row(
-                            children: [
-                              // Thumbnail
-                              Hero(
-                                tag: 'mini_player_thumb',
-                                child: Container(
-                                  width: 48,
-                                  height: 48,
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(12),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withValues(alpha: 0.2),
-                                        blurRadius: 8,
-                                        offset: const Offset(0, 4),
-                                      ),
-                                    ],
-                                  ),
-                                  child: ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: track.thumbnailBytes != null
-                                        ? Image.memory(
-                                            track.thumbnailBytes!,
-                                            fit: BoxFit.cover,
-                                          )
-                                        : Container(
-                                            color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                                            child: Icon(
-                                              CupertinoIcons.music_note_2,
-                                              color: theme.colorScheme.primary,
-                                              size: 24,
-                                            ),
-                                          ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              // Track info
-                              Expanded(
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      track.title,
-                                      style: GoogleFonts.outfit(
-                                        color: theme.colorScheme.onSurface,
-                                        fontWeight: FontWeight.bold,
-                                        fontSize: 15,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                    Text(
-                                      track.subtitle,
-                                      style: GoogleFonts.outfit(
-                                        color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.w500,
-                                      ),
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 12, 10, 4),
+                        child: Row(
+                          children: [
+                            Hero(
+                              tag: 'mini_player_thumb',
+                              child: Container(
+                                width: 52,
+                                height: 52,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(16),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withValues(alpha: 0.2),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 4),
                                     ),
                                   ],
                                 ),
+                                child: ClipRRect(
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: track.thumbnailBytes != null
+                                      ? Image.memory(
+                                          track.thumbnailBytes!,
+                                          fit: BoxFit.cover,
+                                        )
+                                      : DecoratedBox(
+                                          decoration: BoxDecoration(
+                                            gradient: AppTheme.accentGradient,
+                                          ),
+                                          child: Icon(
+                                            CupertinoIcons.music_note_2,
+                                            color: theme.colorScheme.onPrimary,
+                                            size: 26,
+                                          ),
+                                        ),
+                                ),
                               ),
-                              // Controls
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
-                                  IconButton(
-                                    icon: Icon(
-                                      playerProvider.isPlaying
-                                          ? CupertinoIcons.pause_fill
-                                          : CupertinoIcons.play_fill,
-                                      color: theme.colorScheme.primary,
-                                      size: 28,
+                                  Text(
+                                    track.title,
+                                    style: theme.textTheme.titleMedium?.copyWith(
+                                      fontWeight: FontWeight.w700,
+                                      letterSpacing: -0.2,
                                     ),
-                                    onPressed: () {
-                                      if (playerProvider.isPlaying) {
-                                        playerProvider.pause();
-                                      } else {
-                                        playerProvider.play();
-                                      }
-                                    },
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                  IconButton(
-                                    icon: Icon(
-                                      CupertinoIcons.forward_fill,
-                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                                      size: 24,
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    track.subtitle,
+                                    style: theme.textTheme.bodySmall?.copyWith(
+                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.52),
+                                      fontWeight: FontWeight.w500,
                                     ),
-                                    onPressed: playerProvider.currentIndex <
-                                            playerProvider.playlist.length - 1
-                                        ? () => playerProvider.playNext()
-                                        : null,
-                                  ),
-                                  IconButton(
-                                    icon: Icon(
-                                      CupertinoIcons.xmark,
-                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                                      size: 20,
-                                    ),
-                                    onPressed: () => playerProvider.stop(),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
                                 ],
                               ),
-                            ],
-                          ),
+                            ),
+                            _RoundMiniButton(
+                              icon: playerProvider.isPlaying
+                                  ? CupertinoIcons.pause_fill
+                                  : CupertinoIcons.play_fill,
+                              onTap: () {
+                                if (playerProvider.isPlaying) {
+                                  playerProvider.pause();
+                                } else {
+                                  playerProvider.play();
+                                }
+                              },
+                            ),
+                            _RoundMiniButton(
+                              icon: CupertinoIcons.forward_fill,
+                              enabled: playerProvider.canPlayNext,
+                              onTap: playerProvider.canPlayNext
+                                  ? () => playerProvider.playNext()
+                                  : null,
+                            ),
+                            _RoundMiniButton(
+                              icon: CupertinoIcons.xmark,
+                              subtle: true,
+                              onTap: () => playerProvider.stop(),
+                            ),
+                          ],
                         ),
                       ),
-                      // Progress bar
-                      ClipRRect(
-                        borderRadius: const BorderRadius.only(
-                          bottomLeft: Radius.circular(20),
-                          bottomRight: Radius.circular(20),
-                        ),
-                        child: LinearProgressIndicator(
-                          value: playerProvider.duration.inSeconds > 0
-                              ? playerProvider.position.inSeconds /
-                                  playerProvider.duration.inSeconds
-                              : 0,
-                          backgroundColor: Colors.transparent,
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                            theme.colorScheme.primary.withValues(alpha: 0.8),
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(14, 0, 14, 10),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: playerProvider.duration.inSeconds > 0
+                                ? playerProvider.position.inSeconds /
+                                    playerProvider.duration.inSeconds
+                                : 0,
+                            minHeight: 4,
+                            backgroundColor: theme.colorScheme.outline.withValues(alpha: 0.15),
+                            valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
                           ),
-                          minHeight: 2,
                         ),
                       ),
                     ],
@@ -208,6 +197,43 @@ class MiniPlayer extends StatelessWidget {
           ),
         );
       },
+    );
+  }
+}
+
+class _RoundMiniButton extends StatelessWidget {
+  const _RoundMiniButton({
+    required this.icon,
+    required this.onTap,
+    this.enabled = true,
+    this.subtle = false,
+  });
+
+  final IconData icon;
+  final VoidCallback? onTap;
+  final bool enabled;
+  final bool subtle;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final active = enabled && onTap != null;
+    final color = !active
+        ? theme.colorScheme.onSurface.withValues(alpha: 0.22)
+        : subtle
+            ? theme.colorScheme.onSurface.withValues(alpha: 0.45)
+            : theme.colorScheme.primary;
+
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const CircleBorder(),
+        child: Padding(
+          padding: const EdgeInsets.all(6),
+          child: Icon(icon, color: color, size: subtle ? 18 : 22),
+        ),
+      ),
     );
   }
 }
