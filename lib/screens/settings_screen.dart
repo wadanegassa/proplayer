@@ -14,7 +14,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  String _appVersion = 'Loading...';
+  String _appVersion = '…';
 
   @override
   void initState() {
@@ -25,284 +25,216 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _loadAppInfo() async {
     try {
       final packageInfo = await PackageInfo.fromPlatform();
-      setState(() {
-        _appVersion = '${packageInfo.version} (${packageInfo.buildNumber})';
-      });
-    } catch (e) {
-      setState(() {
-        _appVersion = '1.0.0';
-      });
+      if (mounted) {
+        setState(() {
+          _appVersion = '${packageInfo.version} (${packageInfo.buildNumber})';
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() => _appVersion = '1.0.0');
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+
     return Scaffold(
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        title: const Text('Settings'),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Appearance Section
-              const SizedBox(height: 12),
-              _buildSectionTitle('Appearance'),
-              const SizedBox(height: 12),
-              Consumer<ThemeProvider>(
-                builder: (context, themeProvider, _) {
-                  return GlassContainer(
-                    padding: const EdgeInsets.all(16),
-                    child: Row(
-                      children: [
-                        Icon(
-                          themeProvider.isDarkMode
-                              ? CupertinoIcons.moon_fill
-                              : CupertinoIcons.sun_max_fill,
-                          color: Theme.of(context).colorScheme.primary,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                'Dark Mode',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Theme.of(context).textTheme.bodyMedium?.color,
-                                  fontWeight: FontWeight.w500,
-                                ),
+      backgroundColor: Colors.transparent,
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: theme.brightness == Brightness.dark ? AppTheme.pageDark : AppTheme.pageLight,
+        ),
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            SliverAppBar.large(
+              floating: false,
+              pinned: true,
+              backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.72),
+              surfaceTintColor: Colors.transparent,
+              title: Text('Settings', style: theme.textTheme.titleLarge),
+              flexibleSpace: FlexibleSpaceBar(
+                background: SafeArea(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 56, 24, 0),
+                    child: Align(
+                      alignment: Alignment.bottomLeft,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          ShaderMask(
+                            blendMode: BlendMode.srcIn,
+                            shaderCallback: (b) => AppTheme.accentGradient.createShader(b),
+                            child: Text(
+                              'PRO',
+                              style: theme.textTheme.labelLarge?.copyWith(
+                                letterSpacing: 5,
+                                color: Colors.white,
+                                fontWeight: FontWeight.w900,
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                themeProvider.isDarkMode
-                                    ? 'Dark theme active'
-                                    : 'Light theme active',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: Theme.of(context).textTheme.bodySmall?.color?.withAlpha((0.7 * 255).round()),
-                                ),
-                              ),
-                            ],
+                            ),
                           ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Studio',
+                            style: theme.textTheme.headlineMedium?.copyWith(height: 1.05),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  Text('Appearance', style: theme.textTheme.titleMedium),
+                  const SizedBox(height: 10),
+                  Consumer<ThemeProvider>(
+                    builder: (context, themeProvider, _) {
+                      return GlassContainer(
+                        padding: const EdgeInsets.all(18),
+                        child: Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(16),
+                                color: theme.colorScheme.secondary.withValues(alpha: 0.18),
+                              ),
+                              child: Icon(
+                                themeProvider.isDarkMode
+                                    ? CupertinoIcons.moon_stars_fill
+                                    : CupertinoIcons.sun_max_fill,
+                                color: theme.colorScheme.secondary,
+                              ),
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'Dark appearance',
+                                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    themeProvider.isDarkMode ? 'OLED-friendly ink & coral' : 'Warm paper & daylight',
+                                    style: theme.textTheme.bodySmall,
+                                  ),
+                                ],
+                              ),
+                            ),
+                            Switch(
+                              value: themeProvider.isDarkMode,
+                              onChanged: (_) => themeProvider.toggleTheme(),
+                              thumbColor: WidgetStateProperty.resolveWith(
+                                (s) => s.contains(WidgetState.selected)
+                                    ? theme.colorScheme.onPrimary
+                                    : null,
+                              ),
+                              trackColor: WidgetStateProperty.resolveWith(
+                                (s) => s.contains(WidgetState.selected)
+                                    ? theme.colorScheme.primary
+                                    : null,
+                              ),
+                            ),
+                          ],
                         ),
-                        Switch(
-                          value: themeProvider.isDarkMode,
-                          onChanged: (_) => themeProvider.toggleTheme(),
-                          activeThumbColor: Theme.of(context).colorScheme.primary,
+                      );
+                    },
+                  ),
+                  const SizedBox(height: 28),
+                  Text('App', style: theme.textTheme.titleMedium),
+                  const SizedBox(height: 10),
+                  GlassContainer(
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                    child: Column(
+                      children: [
+                        _InfoRow(icon: CupertinoIcons.info_circle, label: 'Version', value: _appVersion),
+                        Divider(height: 1, color: theme.dividerTheme.color),
+                        _InfoRow(icon: CupertinoIcons.device_phone_portrait, label: 'Platform', value: 'Mobile'),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 28),
+                  Text('Data', style: theme.textTheme.titleMedium),
+                  const SizedBox(height: 10),
+                  GlassContainer(
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                    child: Column(
+                      children: [
+                        _ActionRow(
+                          icon: CupertinoIcons.trash_circle,
+                          title: 'Clear cache',
+                          subtitle: 'Free temporary storage',
+                          onTap: _showClearCacheDialog,
+                        ),
+                        Divider(height: 1, color: theme.dividerTheme.color),
+                        _ActionRow(
+                          icon: CupertinoIcons.clock_fill,
+                          title: 'Clear history',
+                          subtitle: 'Recently played list',
+                          onTap: _showClearHistoryDialog,
                         ),
                       ],
                     ),
-                  );
-                },
-              ),
-
-              const SizedBox(height: 30),
-
-              // App Info Section
-              _buildSectionTitle('App Information'),
-              const SizedBox(height: 12),
-              GlassContainer(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    _buildInfoRow(
-                      CupertinoIcons.info_circle,
-                      'Version',
-                      _appVersion,
-                    ),
-                    Divider(height: 24, color: Theme.of(context).colorScheme.onSurface.withAlpha((0.24 * 255).round())),
-                    _buildInfoRow(
-                      CupertinoIcons.device_phone_portrait,
-                      'Platform',
-                      'Android/iOS',
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 30),
-
-              // Storage Section
-              _buildSectionTitle('Storage'),
-              const SizedBox(height: 12),
-              GlassContainer(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    _buildActionRow(
-                      CupertinoIcons.trash,
-                      'Clear Cache',
-                      'Free up storage space',
-                      () => _showClearCacheDialog(),
-                    ),
-                    Divider(height: 24, color: Theme.of(context).colorScheme.onSurface.withAlpha((0.24 * 255).round())),
-                    _buildActionRow(
-                      CupertinoIcons.delete,
-                      'Clear History',
-                      'Remove recently played',
-                      () => _showClearHistoryDialog(),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 30),
-
-              // About Section
-              _buildSectionTitle('About'),
-              const SizedBox(height: 12),
-              GlassContainer(
-                padding: const EdgeInsets.all(16),
-                child: Column(
-                  children: [
-                    _buildActionRow(
-                      CupertinoIcons.heart_fill,
-                      'Rate App',
-                      'Support us with a review',
-                      () => _showComingSoonDialog('Rate App'),
-                    ),
-                    Divider(height: 24, color: Theme.of(context).colorScheme.onSurface.withAlpha((0.24 * 255).round())),
-                    _buildActionRow(
-                      CupertinoIcons.share,
-                      'Share App',
-                      'Tell your friends',
-                      () => _showComingSoonDialog('Share App'),
-                    ),
-                    Divider(height: 24, color: Theme.of(context).colorScheme.onSurface.withAlpha((0.24 * 255).round())),
-                    _buildActionRow(
-                      CupertinoIcons.doc_text,
-                      'Privacy Policy',
-                      'Read our privacy policy',
-                      () => _showComingSoonDialog('Privacy Policy'),
-                    ),
-                    Divider(height: 24, color: Theme.of(context).colorScheme.onSurface.withAlpha((0.24 * 255).round())),
-                    _buildActionRow(
-                      CupertinoIcons.doc_plaintext,
-                      'Terms of Service',
-                      'Read our terms',
-                      () => _showComingSoonDialog('Terms of Service'),
-                    ),
-                  ],
-                ),
-              ),
-
-              const SizedBox(height: 30),
-
-              // Developer Info
-              Center(
-                child: Column(
-                  children: [
-                    Text(
-                      'ProPlayer',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.bold,
-                        color: Theme.of(context).textTheme.bodyMedium?.color,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Made with ❤️ for music lovers',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Theme.of(context).textTheme.bodySmall?.color?.withAlpha((0.6 * 255).round()),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSectionTitle(String title) {
-    return Text(
-      title,
-      style: TextStyle(
-        fontSize: 18,
-        fontWeight: FontWeight.bold,
-        color: Theme.of(context).textTheme.bodyMedium?.color,
-      ),
-    );
-  }
-
-  Widget _buildInfoRow(IconData icon, String label, String value) {
-    return Row(
-      children: [
-        Icon(icon, color: AppTheme.primaryColor, size: 20),
-        const SizedBox(width: 12),
-        Expanded(
-          child: Text(
-            label,
-            style: TextStyle(
-              fontSize: 16,
-              color: Theme.of(context).textTheme.bodyMedium?.color,
-            ),
-          ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            fontSize: 14,
-            color: Theme.of(context).textTheme.bodySmall?.color?.withAlpha((0.6 * 255).round()),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildActionRow(
-    IconData icon,
-    String title,
-    String subtitle,
-    VoidCallback onTap,
-  ) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
-        child: Row(
-          children: [
-            Icon(icon, color: AppTheme.primaryColor, size: 20),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Theme.of(context).textTheme.bodyMedium?.color,
-                      fontWeight: FontWeight.w500,
+                  ),
+                  const SizedBox(height: 28),
+                  Text('Support', style: theme.textTheme.titleMedium),
+                  const SizedBox(height: 10),
+                  GlassContainer(
+                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                    child: Column(
+                      children: [
+                        _ActionRow(
+                          icon: CupertinoIcons.heart_fill,
+                          title: 'Rate ProPlayer',
+                          subtitle: 'On the store',
+                          onTap: () => _showComingSoon('Rate'),
+                        ),
+                        Divider(height: 1, color: theme.dividerTheme.color),
+                        _ActionRow(
+                          icon: CupertinoIcons.share_up,
+                          title: 'Share',
+                          subtitle: 'Invite a friend',
+                          onTap: () => _showComingSoon('Share'),
+                        ),
+                        Divider(height: 1, color: theme.dividerTheme.color),
+                        _ActionRow(
+                          icon: CupertinoIcons.doc_text_fill,
+                          title: 'Privacy',
+                          onTap: () => _showComingSoon('Privacy'),
+                        ),
+                        Divider(height: 1, color: theme.dividerTheme.color),
+                        _ActionRow(
+                          icon: CupertinoIcons.doc_plaintext,
+                          title: 'Terms',
+                          onTap: () => _showComingSoon('Terms'),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Theme.of(context).textTheme.bodySmall?.color?.withAlpha((0.5 * 255).round()),
+                  const SizedBox(height: 40),
+                  Center(
+                    child: Column(
+                      children: [
+                        Text('ProPlayer', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
+                        const SizedBox(height: 6),
+                        Text(
+                          'Crafted for listening sessions.',
+                          style: theme.textTheme.bodySmall,
+                        ),
+                      ],
                     ),
                   ),
-                ],
+                ]),
               ),
-            ),
-            Icon(
-              CupertinoIcons.chevron_right,
-              color: Theme.of(context).textTheme.bodySmall?.color?.withAlpha((0.3 * 255).round()),
-              size: 18,
             ),
           ],
         ),
@@ -312,26 +244,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _showClearCacheDialog() {
     final theme = Theme.of(context);
-
-    showDialog(
+    showDialog<void>(
       context: context,
-  builder: (context) => AlertDialog(
-  backgroundColor: theme.dialogTheme.backgroundColor,
-        title: Text('Clear Cache', style: TextStyle(color: theme.textTheme.bodyLarge?.color)),
+      builder: (ctx) => AlertDialog(
+        title: Text('Clear cache', style: theme.textTheme.titleLarge),
         content: Text(
-          'This will clear all cached images and data. Continue?',
-          style: TextStyle(color: theme.textTheme.bodyMedium?.color?.withAlpha((0.8 * 255).round())),
+          'Remove cached thumbnails and temp data?',
+          style: theme.textTheme.bodyMedium,
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Cache cleared successfully')),
+                const SnackBar(content: Text('Cache cleared')),
               );
             },
             child: const Text('Clear'),
@@ -343,26 +270,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
   void _showClearHistoryDialog() {
     final theme = Theme.of(context);
-
-    showDialog(
+    showDialog<void>(
       context: context,
-  builder: (context) => AlertDialog(
-  backgroundColor: theme.dialogTheme.backgroundColor,
-        title: Text('Clear History', style: TextStyle(color: theme.textTheme.bodyLarge?.color)),
+      builder: (ctx) => AlertDialog(
+        title: Text('Clear history', style: theme.textTheme.titleLarge),
         content: Text(
-          'This will remove all recently played items. Continue?',
-          style: TextStyle(color: theme.textTheme.bodyMedium?.color?.withAlpha((0.8 * 255).round())),
+          'Remove all recently played items?',
+          style: theme.textTheme.bodyMedium,
         ),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
+          FilledButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(ctx);
               ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('History cleared successfully')),
+                const SnackBar(content: Text('History cleared')),
               );
             },
             child: const Text('Clear'),
@@ -372,24 +294,92 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showComingSoonDialog(String feature) {
+  void _showComingSoon(String feature) {
     final theme = Theme.of(context);
-
-    showDialog(
+    showDialog<void>(
       context: context,
-  builder: (context) => AlertDialog(
-  backgroundColor: theme.dialogTheme.backgroundColor,
-        title: Text(feature, style: TextStyle(color: theme.textTheme.bodyLarge?.color)),
-        content: Text(
-          'This feature is coming soon!',
-          style: TextStyle(color: theme.textTheme.bodyMedium?.color?.withAlpha((0.8 * 255).round())),
-        ),
+      builder: (ctx) => AlertDialog(
+        title: Text(feature, style: theme.textTheme.titleLarge),
+        content: Text('Coming soon.', style: theme.textTheme.bodyMedium),
         actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('OK'),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK')),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({required this.icon, required this.label, required this.value});
+
+  final IconData icon;
+  final String label;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Row(
+        children: [
+          Icon(icon, color: theme.colorScheme.primary, size: 22),
+          const SizedBox(width: 12),
+          Expanded(child: Text(label, style: theme.textTheme.bodyLarge)),
+          Text(
+            value,
+            style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _ActionRow extends StatelessWidget {
+  const _ActionRow({
+    required this.icon,
+    required this.title,
+    this.subtitle,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String title;
+  final String? subtitle;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(14),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 14),
+        child: Row(
+          children: [
+            Icon(icon, color: theme.colorScheme.primary, size: 22),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(title, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
+                  if (subtitle != null) ...[
+                    const SizedBox(height: 2),
+                    Text(subtitle!, style: theme.textTheme.bodySmall),
+                  ],
+                ],
+              ),
+            ),
+            Icon(
+              CupertinoIcons.chevron_forward,
+              size: 18,
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
+            ),
+          ],
+        ),
       ),
     );
   }

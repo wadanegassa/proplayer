@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import 'package:video_player/video_player.dart' as vp;
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'dart:io';
 import 'dart:async';
 import '../models/media_item.dart';
@@ -211,18 +210,16 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                       children: [
                         Text(
                           widget.mediaItem.title,
-                          style: GoogleFonts.outfit(
+                          style: theme.textTheme.titleLarge?.copyWith(
                             color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
+                            fontWeight: FontWeight.w700,
                           ),
                           overflow: TextOverflow.ellipsis,
                         ),
                         Text(
                           widget.mediaItem.subtitle,
-                          style: GoogleFonts.outfit(
-                            color: Colors.white.withValues(alpha: 0.6),
-                            fontSize: 14,
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: Colors.white.withValues(alpha: 0.65),
                           ),
                         ),
                       ],

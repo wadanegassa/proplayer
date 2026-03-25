@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../theme/app_theme.dart';
 import '../widgets/media_card.dart';
 import '../providers/library_provider.dart';
 import '../providers/browser_provider.dart';
@@ -30,19 +31,24 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: theme.scaffoldBackgroundColor,
+        backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.85),
         leading: IconButton(
           icon: Icon(Icons.arrow_back, color: theme.colorScheme.onSurface),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          'Search: "${widget.query}"',
-          style: TextStyle(color: theme.colorScheme.onSurface),
+          '"${widget.query}"',
+          style: theme.textTheme.titleMedium,
         ),
       ),
-      body: SingleChildScrollView(
+      body: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: theme.brightness == Brightness.dark ? AppTheme.pageDark : AppTheme.pageLight,
+        ),
+        child: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -175,6 +181,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
               },
             ),
           ],
+        ),
         ),
       ),
     );

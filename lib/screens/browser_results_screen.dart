@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 // removed app_theme import; using Theme.of(context)
+import '../theme/app_theme.dart';
 import '../widgets/media_card.dart';
 import '../providers/browser_provider.dart';
 import 'video_player_screen.dart';
@@ -29,8 +30,9 @@ class _BrowserResultsScreenState extends State<BrowserResultsScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        backgroundColor: theme.appBarTheme.backgroundColor,
+        backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.85),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () => Navigator.pop(context),
@@ -49,31 +51,39 @@ class _BrowserResultsScreenState extends State<BrowserResultsScreen> {
           ),
         ],
       ),
-      body: Consumer<BrowserProvider>(
-        builder: (context, provider, child) {
-          if (provider.state == BrowserState.loading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+      body: Container(
+        width: double.infinity,
+        decoration: BoxDecoration(
+          gradient: theme.brightness == Brightness.dark ? AppTheme.pageDark : AppTheme.pageLight,
+        ),
+        child: Consumer<BrowserProvider>(
+          builder: (context, provider, child) {
+            if (provider.state == BrowserState.loading) {
+              return Center(child: CircularProgressIndicator(color: theme.colorScheme.primary));
+            }
 
             if (provider.state == BrowserState.error) {
-            return Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(Icons.error_outline, color: Colors.red, size: 48),
-                  const SizedBox(height: 16),
-                  Text('Failed to load videos', style: TextStyle(color: theme.colorScheme.onSurface.withAlpha(179))),
-                  const SizedBox(height: 16),
-                  ElevatedButton(
-                    onPressed: () => provider.fetchCategory(widget.category),
-                    child: const Text('Retry'),
-                  ),
-                ],
-              ),
-            );
-          }
+              return Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(Icons.error_outline, color: theme.colorScheme.error, size: 48),
+                    const SizedBox(height: 16),
+                    Text(
+                      'Couldn’t load videos',
+                      style: theme.textTheme.titleMedium,
+                    ),
+                    const SizedBox(height: 16),
+                    FilledButton(
+                      onPressed: () => provider.fetchCategory(widget.category),
+                      child: const Text('Retry'),
+                    ),
+                  ],
+                ),
+              );
+            }
 
-          return GridView.builder(
+            return GridView.builder(
             padding: const EdgeInsets.all(16),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
@@ -105,6 +115,7 @@ class _BrowserResultsScreenState extends State<BrowserResultsScreen> {
             },
           );
         },
+        ),
       ),
     );
   }

@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../widgets/media_card.dart';
 import '../providers/library_provider.dart';
 import '../models/media_item.dart';
-import '../theme/app_theme.dart';
+import '../widgets/app_shell_background.dart';
 import 'local_player_screen.dart';
 import 'video_player_screen.dart';
 
@@ -53,25 +52,11 @@ class _LibraryScreenState extends State<LibraryScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
       extendBody: true,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: isDark
-              ? LinearGradient(
-                  colors: [
-                    theme.colorScheme.surface,
-                    const Color(0xFF1E1B4B), // Deep indigo
-                    theme.scaffoldBackgroundColor,
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  stops: const [0.0, 0.4, 1.0],
-                )
-              : AppTheme.morningMistGradient,
-        ),
+      backgroundColor: Colors.transparent,
+      body: AppShellBackground(
         child: SafeArea(
           bottom: false,
           child: Column(
@@ -123,22 +108,15 @@ class _LibraryScreenState extends State<LibraryScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Your Library',
-                    style: GoogleFonts.outfit(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: theme.colorScheme.onSurface,
-                      letterSpacing: -0.5,
-                    ),
+                    'Your library',
+                    style: theme.textTheme.headlineMedium?.copyWith(fontSize: 28),
                   ),
                   Consumer<LibraryProvider>(
                     builder: (context, provider, _) {
                       return Text(
-                        '${provider.audioFiles.length} Songs • ${provider.videoFiles.length} Videos',
-                        style: GoogleFonts.outfit(
-                          color: theme.colorScheme.onSurface.withValues(alpha: 0.7),
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
+                        '${provider.audioFiles.length} tracks · ${provider.videoFiles.length} videos',
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
                         ),
                       );
                     },
@@ -252,10 +230,7 @@ class _LibraryScreenState extends State<LibraryScreen>
         ),
         labelColor: Colors.white,
         unselectedLabelColor: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-        labelStyle: GoogleFonts.outfit(
-          fontWeight: FontWeight.bold,
-          fontSize: 15,
-        ),
+        labelStyle: theme.textTheme.labelLarge?.copyWith(fontSize: 14),
         indicatorSize: TabBarIndicatorSize.tab,
         dividerColor: Colors.transparent,
         tabs: const [
@@ -339,11 +314,10 @@ class _LibraryScreenState extends State<LibraryScreen>
           CircularProgressIndicator(color: Theme.of(context).colorScheme.primary),
           const SizedBox(height: 16),
           Text(
-            'Scanning Library...',
-            style: GoogleFonts.outfit(
-              color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.7),
-              fontSize: 16,
-            ),
+            'Scanning library…',
+            style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                  color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.55),
+                ),
           ),
         ],
       ),
@@ -375,9 +349,8 @@ class _LibraryScreenState extends State<LibraryScreen>
           const SizedBox(height: 16),
           Text(
             message,
-            style: GoogleFonts.outfit(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-              fontSize: 16,
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
             ),
           ),
           if (_searchQuery.isEmpty)
@@ -424,18 +397,13 @@ class _LibraryScreenState extends State<LibraryScreen>
           ),
           const SizedBox(height: 24),
           Text(
-            'Folder View',
-            style: GoogleFonts.outfit(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-              color: theme.colorScheme.onSurface,
-            ),
+            'Folders',
+            style: theme.textTheme.headlineSmall,
           ),
           const SizedBox(height: 8),
           Text(
-            'Browse by folders coming soon',
-            style: GoogleFonts.outfit(
-              fontSize: 16,
+            'Browse by folder — coming soon.',
+            style: theme.textTheme.bodyMedium?.copyWith(
               color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
             ),
           ),

@@ -4,7 +4,6 @@ import 'package:just_audio/just_audio.dart';
 import 'dart:async';
 import 'package:provider/provider.dart';
 import '../models/media_item.dart';
-// removed app_theme import; using Theme.of(context)
 import '../providers/audio_player_provider.dart';
 
 class LocalPlayerScreen extends StatefulWidget {
@@ -25,7 +24,6 @@ class LocalPlayerScreen extends StatefulWidget {
 
 class _LocalPlayerScreenState extends State<LocalPlayerScreen> {
   late AudioPlayer _audioPlayer;
-  late int _currentIndex;
   bool _isPlaying = false;
   Duration _duration = Duration.zero;
   Duration _position = Duration.zero;
@@ -39,16 +37,8 @@ class _LocalPlayerScreenState extends State<LocalPlayerScreen> {
     
     final audioProvider = Provider.of<AudioPlayerProvider>(context, listen: false);
     
-    if (widget.fromMiniPlayer) {
-      // Use existing player from provider
-      _audioPlayer = audioProvider.audioPlayer;
-      _currentIndex = audioProvider.currentIndex;
-    } else {
-      // Start new playback
-      _audioPlayer = audioProvider.audioPlayer;
-      _currentIndex = widget.playlist.indexOf(widget.mediaItem);
-      
-      // Tell provider to start playing
+    _audioPlayer = audioProvider.audioPlayer;
+    if (!widget.fromMiniPlayer) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         audioProvider.playTrack(widget.mediaItem, widget.playlist);
       });
@@ -97,21 +87,11 @@ class _LocalPlayerScreenState extends State<LocalPlayerScreen> {
   Future<void> _playNext() async {
     final audioProvider = Provider.of<AudioPlayerProvider>(context, listen: false);
     await audioProvider.playNext();
-    if (mounted) {
-      setState(() {
-        _currentIndex = audioProvider.currentIndex;
-      });
-    }
   }
 
   Future<void> _playPrevious() async {
     final audioProvider = Provider.of<AudioPlayerProvider>(context, listen: false);
     await audioProvider.playPrevious();
-    if (mounted) {
-      setState(() {
-        _currentIndex = audioProvider.currentIndex;
-      });
-    }
   }
 
   void _togglePlayPause() {
@@ -165,7 +145,9 @@ class _LocalPlayerScreenState extends State<LocalPlayerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final currentSong = widget.playlist[_currentIndex];
+    final audioProvider = context.watch<AudioPlayerProvider>();
+    final currentSong =
+        audioProvider.currentTrack ?? widget.mediaItem;
 
     final theme = Theme.of(context);
 
@@ -298,6 +280,36 @@ class _LocalPlayerScreenState extends State<LocalPlayerScreen> {
               ),
               const SizedBox(height: 20),
 
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  IconButton(
+                    icon: Icon(
+                      CupertinoIcons.shuffle,
+                      color: audioProvider.shuffleEnabled
+                          ? theme.colorScheme.primary
+                          : theme.colorScheme.onSurface.withAlpha(128),
+                    ),
+                    onPressed: audioProvider.playlist.isEmpty
+                        ? null
+                        : () => audioProvider.toggleShuffle(),
+                  ),
+                  const SizedBox(width: 24),
+                  IconButton(
+                    icon: Icon(
+                      audioProvider.repeatMode == PlayerRepeatMode.one
+                          ? CupertinoIcons.repeat_1
+                          : CupertinoIcons.repeat,
+                      color: audioProvider.repeatMode == PlayerRepeatMode.off
+                          ? theme.colorScheme.onSurface.withAlpha(128)
+                          : theme.colorScheme.primary,
+                    ),
+                    onPressed: () => audioProvider.cycleRepeatMode(),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+
               // Controls
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -316,8 +328,11 @@ class _LocalPlayerScreenState extends State<LocalPlayerScreen> {
                   IconButton(
                     icon: const Icon(CupertinoIcons.backward_fill),
                     iconSize: 32,
-                    color: _currentIndex > 0 ? theme.colorScheme.onSurface : theme.colorScheme.onSurface.withAlpha(61),
-                    onPressed: _currentIndex > 0 ? _playPrevious : null,
+                    color: audioProvider.canPlayPrevious
+                        ? theme.colorScheme.onSurface
+                        : theme.colorScheme.onSurface.withAlpha(61),
+                    onPressed:
+                        audioProvider.canPlayPrevious ? _playPrevious : null,
                   ),
                   Container(
                     width: 70,
@@ -349,12 +364,11 @@ class _LocalPlayerScreenState extends State<LocalPlayerScreen> {
                   IconButton(
                     icon: const Icon(CupertinoIcons.forward_fill),
                     iconSize: 32,
-                    color: _currentIndex < widget.playlist.length - 1
+                    color: audioProvider.canPlayNext
                         ? theme.colorScheme.onSurface
                         : theme.colorScheme.onSurface.withAlpha(61),
-                    onPressed: _currentIndex < widget.playlist.length - 1
-                        ? _playNext
-                        : null,
+                    onPressed:
+                        audioProvider.canPlayNext ? _playNext : null,
                   ),
                   IconButton(
                     icon: const Icon(CupertinoIcons.heart),
