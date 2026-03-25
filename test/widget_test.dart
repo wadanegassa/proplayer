@@ -1,30 +1,36 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-
-import 'package:proplayer/main.dart';
+import 'package:provider/provider.dart';
+import 'package:proplayer/providers/audio_player_provider.dart';
+import 'package:proplayer/providers/browser_provider.dart';
+import 'package:proplayer/providers/home_provider.dart';
+import 'package:proplayer/providers/library_provider.dart';
+import 'package:proplayer/providers/player_provider.dart';
+import 'package:proplayer/providers/theme_provider.dart';
+import 'package:proplayer/screens/main_screen.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const ProPlayer());
+  testWidgets('MainScreen builds with app providers', (WidgetTester tester) async {
+    final audio = AudioPlayerProvider();
+    audio.initialize();
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    await tester.pumpWidget(
+      MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (_) => PlayerProvider()),
+          ChangeNotifierProvider(create: (_) => HomeProvider()),
+          ChangeNotifierProvider(create: (_) => BrowserProvider()),
+          ChangeNotifierProvider(create: (_) => LibraryProvider()),
+          ChangeNotifierProvider.value(value: audio),
+          ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ],
+        child: const MaterialApp(
+          home: MainScreen(),
+        ),
+      ),
+    );
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
     await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    expect(find.byType(MainScreen), findsOneWidget);
   });
 }
