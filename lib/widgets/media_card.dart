@@ -1,7 +1,5 @@
 import 'dart:typed_data';
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
-
 class MediaCard extends StatefulWidget {
   final String title;
   final String subtitle;
@@ -81,7 +79,7 @@ class _MediaCardState extends State<MediaCard> with SingleTickerProviderStateMix
     }
 
     final theme = Theme.of(context);
-    final radius = 20.0;
+    final radius = 16.0;
 
     return GestureDetector(
       onTapDown: (_) {
@@ -119,20 +117,15 @@ class _MediaCardState extends State<MediaCard> with SingleTickerProviderStateMix
                             borderRadius: BorderRadius.circular(radius),
                             boxShadow: [
                               BoxShadow(
-                                color: theme.colorScheme.primary.withValues(alpha: 0.12),
-                                blurRadius: 20,
-                                offset: const Offset(0, 10),
-                              ),
-                              BoxShadow(
                                 color: Colors.black.withValues(
-                                  alpha: theme.brightness == Brightness.dark ? 0.25 : 0.06,
+                                  alpha: theme.brightness == Brightness.dark ? 0.2 : 0.06,
                                 ),
-                                blurRadius: 16,
-                                offset: const Offset(0, 6),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
                               ),
                             ],
                             border: Border.all(
-                              color: theme.colorScheme.outline.withValues(alpha: 0.12),
+                              color: theme.colorScheme.outline.withValues(alpha: 0.4),
                             ),
                           ),
                           child: ClipRRect(
@@ -141,24 +134,6 @@ class _MediaCardState extends State<MediaCard> with SingleTickerProviderStateMix
                               fit: StackFit.expand,
                               children: [
                                 _buildImageContent(imageProvider, theme, radius - 1),
-                                Positioned(
-                                  left: 0,
-                                  right: 0,
-                                  top: 0,
-                                  height: (cardHeight) * 0.38,
-                                  child: DecoratedBox(
-                                    decoration: BoxDecoration(
-                                      gradient: LinearGradient(
-                                        colors: [
-                                          Colors.white.withValues(alpha: 0.22),
-                                          Colors.transparent,
-                                        ],
-                                        begin: Alignment.topCenter,
-                                        end: Alignment.bottomCenter,
-                                      ),
-                                    ),
-                                  ),
-                                ),
                                 if (_isPressed)
                                   DecoratedBox(
                                     decoration: BoxDecoration(
@@ -205,15 +180,8 @@ class _MediaCardState extends State<MediaCard> with SingleTickerProviderStateMix
                           child: Container(
                             padding: const EdgeInsets.all(7),
                             decoration: BoxDecoration(
-                              gradient: AppTheme.accentGradient,
-                              borderRadius: BorderRadius.circular(10),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: theme.colorScheme.primary.withValues(alpha: 0.4),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
+                              color: theme.colorScheme.primary,
+                              borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
                               Icons.play_arrow_rounded,
@@ -268,14 +236,10 @@ class _MediaCardState extends State<MediaCard> with SingleTickerProviderStateMix
                 height: double.infinity,
               )
             : Center(
-                child: ShaderMask(
-                  shaderCallback: (bounds) =>
-                      AppTheme.accentGradient.createShader(bounds),
-                  child: Icon(
-                    widget.isVideo ? Icons.movie_rounded : Icons.music_note_rounded,
-                    size: 52,
-                    color: Colors.white,
-                  ),
+                child: Icon(
+                  widget.isVideo ? Icons.movie_rounded : Icons.music_note_rounded,
+                  size: 48,
+                  color: theme.colorScheme.primary.withValues(alpha: 0.65),
                 ),
               ),
       ),
