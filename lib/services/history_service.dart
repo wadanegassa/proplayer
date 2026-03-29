@@ -45,4 +45,9 @@ class HistoryService {
         .map((jsonStr) => MediaItem.fromJson(jsonDecode(jsonStr)))
         .toList();
   }
+
+  Future<void> clearAll() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_key);
+  }
 }
