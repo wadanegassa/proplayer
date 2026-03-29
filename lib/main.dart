@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio_background/just_audio_background.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'screens/main_screen.dart';
-import 'providers/player_provider.dart';
 import 'providers/home_provider.dart';
 import 'providers/browser_provider.dart';
 import 'providers/library_provider.dart';
 import 'providers/audio_player_provider.dart';
 import 'providers/theme_provider.dart';
+import 'providers/main_nav_provider.dart';
 import 'services/media_service.dart';
 import 'package:photo_manager/photo_manager.dart';
 import 'theme/app_theme.dart';
@@ -29,12 +28,12 @@ void main() async {
   runApp(
     MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => PlayerProvider()),
         ChangeNotifierProvider(create: (_) => HomeProvider()),
         ChangeNotifierProvider(create: (_) => BrowserProvider()),
         ChangeNotifierProvider(create: (_) => LibraryProvider()),
         ChangeNotifierProvider.value(value: audioPlayerProvider),
         ChangeNotifierProvider(create: (_) => ThemeProvider()),
+        ChangeNotifierProvider(create: (_) => MainNavProvider()),
       ],
       child: const ProPlayer(),
     ),
@@ -118,7 +117,7 @@ class _PermissionHandlerScreenState extends State<PermissionHandlerScreen> {
                 ),
                 const SizedBox(height: 24),
                 Text(
-                  'Preparing studio…',
+                  'Loading…',
                   style: theme.textTheme.titleMedium?.copyWith(
                     color: theme.colorScheme.onSurface.withValues(alpha: 0.6),
                   ),
@@ -148,19 +147,15 @@ class _PermissionHandlerScreenState extends State<PermissionHandlerScreen> {
                     padding: const EdgeInsets.all(28),
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      gradient: AppTheme.accentGradient,
-                      boxShadow: [
-                        BoxShadow(
-                          color: theme.colorScheme.primary.withValues(alpha: 0.45),
-                          blurRadius: 40,
-                          offset: const Offset(0, 16),
-                        ),
-                      ],
+                      color: theme.colorScheme.primaryContainer.withValues(
+                        alpha: theme.brightness == Brightness.dark ? 0.35 : 1,
+                      ),
+                      border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.35)),
                     ),
                     child: Icon(
                       Icons.folder_special_rounded,
                       size: 56,
-                      color: theme.colorScheme.onPrimary,
+                      color: theme.colorScheme.primary,
                     ),
                   ),
                   const SizedBox(height: 32),
@@ -171,7 +166,7 @@ class _PermissionHandlerScreenState extends State<PermissionHandlerScreen> {
                   ),
                   const SizedBox(height: 12),
                   Text(
-                    'Allow ProPlayer to read audio & video on your device so your library, playlists, and player can shine.',
+                    'Allow ProPlayer to read audio & video on your device for the Library tab and local playback. You can still browse and play YouTube without this.',
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
@@ -179,6 +174,11 @@ class _PermissionHandlerScreenState extends State<PermissionHandlerScreen> {
                     ),
                   ),
                   const Spacer(),
+                  TextButton(
+                    onPressed: () => setState(() => _isGranted = true),
+                    child: const Text('Continue without library'),
+                  ),
+                  const SizedBox(height: 8),
                   FilledButton.icon(
                     onPressed: () async {
                       final mediaService = MediaService();
@@ -190,10 +190,7 @@ class _PermissionHandlerScreenState extends State<PermissionHandlerScreen> {
                       }
                     },
                     icon: const Icon(Icons.lock_open_rounded),
-                    label: Text(
-                      'Grant access',
-                      style: GoogleFonts.dmSans(fontWeight: FontWeight.w700),
-                    ),
+                    label: const Text('Grant access'),
                   ),
                   const SizedBox(height: 12),
                   TextButton(
