@@ -5,8 +5,8 @@ import 'package:proplayer/providers/audio_player_provider.dart';
 import 'package:proplayer/providers/browser_provider.dart';
 import 'package:proplayer/providers/home_provider.dart';
 import 'package:proplayer/providers/library_provider.dart';
-import 'package:proplayer/providers/player_provider.dart';
 import 'package:proplayer/providers/theme_provider.dart';
+import 'package:proplayer/providers/main_nav_provider.dart';
 import 'package:proplayer/screens/main_screen.dart';
 
 void main() {
@@ -17,12 +17,12 @@ void main() {
     await tester.pumpWidget(
       MultiProvider(
         providers: [
-          ChangeNotifierProvider(create: (_) => PlayerProvider()),
           ChangeNotifierProvider(create: (_) => HomeProvider()),
           ChangeNotifierProvider(create: (_) => BrowserProvider()),
           ChangeNotifierProvider(create: (_) => LibraryProvider()),
           ChangeNotifierProvider.value(value: audio),
           ChangeNotifierProvider(create: (_) => ThemeProvider()),
+          ChangeNotifierProvider(create: (_) => MainNavProvider()),
         ],
         child: const MaterialApp(
           home: MainScreen(),
