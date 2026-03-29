@@ -1,10 +1,16 @@
+import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
-import '../theme/app_theme.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../legal/app_legal.dart';
 import '../widgets/glass_container.dart';
+import '../widgets/app_shell_background.dart';
 import '../providers/theme_provider.dart';
+import '../providers/home_provider.dart';
+import '../services/history_service.dart';
 
 class SettingsScreen extends StatefulWidget {
   const SettingsScreen({super.key});
@@ -41,17 +47,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: Container(
-        decoration: BoxDecoration(
-          gradient: theme.brightness == Brightness.dark ? AppTheme.pageDark : AppTheme.pageLight,
-        ),
+      body: AppShellBackground(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
             SliverAppBar.large(
               floating: false,
               pinned: true,
-              backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.72),
+              backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.65),
               surfaceTintColor: Colors.transparent,
               title: Text('Settings', style: theme.textTheme.titleLarge),
               flexibleSpace: FlexibleSpaceBar(
@@ -64,22 +67,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         mainAxisSize: MainAxisSize.min,
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          ShaderMask(
-                            blendMode: BlendMode.srcIn,
-                            shaderCallback: (b) => AppTheme.accentGradient.createShader(b),
-                            child: Text(
-                              'PRO',
-                              style: theme.textTheme.labelLarge?.copyWith(
-                                letterSpacing: 5,
-                                color: Colors.white,
-                                fontWeight: FontWeight.w900,
-                              ),
+                          Text(
+                            'PROPLAYER',
+                            style: theme.textTheme.labelSmall?.copyWith(
+                              color: theme.colorScheme.primary,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 2,
                             ),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 8),
                           Text(
-                            'Studio',
-                            style: theme.textTheme.headlineMedium?.copyWith(height: 1.05),
+                            'Settings',
+                            style: theme.textTheme.headlineMedium?.copyWith(
+                              height: 1.05,
+                              fontWeight: FontWeight.w700,
+                            ),
                           ),
                         ],
                       ),
@@ -196,26 +198,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                           icon: CupertinoIcons.heart_fill,
                           title: 'Rate ProPlayer',
                           subtitle: 'On the store',
-                          onTap: () => _showComingSoon('Rate'),
+                          onTap: _openStoreListing,
                         ),
                         Divider(height: 1, color: theme.dividerTheme.color),
                         _ActionRow(
                           icon: CupertinoIcons.share_up,
                           title: 'Share',
                           subtitle: 'Invite a friend',
-                          onTap: () => _showComingSoon('Share'),
+                          onTap: _shareApp,
                         ),
                         Divider(height: 1, color: theme.dividerTheme.color),
                         _ActionRow(
                           icon: CupertinoIcons.doc_text_fill,
                           title: 'Privacy',
-                          onTap: () => _showComingSoon('Privacy'),
+                          onTap: () => _showLegal(AppLegal.privacyTitle, AppLegal.privacyBody),
                         ),
                         Divider(height: 1, color: theme.dividerTheme.color),
                         _ActionRow(
                           icon: CupertinoIcons.doc_plaintext,
                           title: 'Terms',
-                          onTap: () => _showComingSoon('Terms'),
+                          onTap: () => _showLegal(AppLegal.termsTitle, AppLegal.termsBody),
                         ),
                       ],
                     ),
@@ -281,8 +283,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
           FilledButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
+              await HistoryService().clearAll();
+              if (!mounted) return;
+              await context.read<HomeProvider>().loadHomeData();
+              if (!mounted) return;
               ScaffoldMessenger.of(context).showSnackBar(
                 const SnackBar(content: Text('History cleared')),
               );
@@ -294,15 +300,44 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showComingSoon(String feature) {
+  Future<void> _openStoreListing() async {
+    final uri = defaultTargetPlatform == TargetPlatform.iOS
+        ? Uri.parse('https://apps.apple.com/search?term=ProPlayer')
+        : Uri.parse('https://play.google.com/store/apps/details?id=com.example.proplayer');
+    final ok = await canLaunchUrl(uri);
+    if (!mounted) return;
+    if (ok) {
+      await launchUrl(uri, mode: LaunchMode.externalApplication);
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Could not open the store')),
+      );
+    }
+  }
+
+  Future<void> _shareApp() async {
+    await SharePlus.instance.share(
+      ShareParams(
+        text: 'Check out ProPlayer — local library and YouTube in one place.',
+        subject: 'ProPlayer',
+      ),
+    );
+  }
+
+  void _showLegal(String title, String body) {
     final theme = Theme.of(context);
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(feature, style: theme.textTheme.titleLarge),
-        content: Text('Coming soon.', style: theme.textTheme.bodyMedium),
+        title: Text(title, style: theme.textTheme.titleLarge),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: SingleChildScrollView(
+            child: Text(body.trim(), style: theme.textTheme.bodyMedium?.copyWith(height: 1.45)),
+          ),
+        ),
         actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('OK')),
+          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
         ],
       ),
     );
