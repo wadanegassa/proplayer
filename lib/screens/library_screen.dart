@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
+import '../layout/app_layout.dart';
+import '../models/media_album.dart';
 import '../widgets/media_card.dart';
 import '../providers/library_provider.dart';
 import '../models/media_item.dart';
 import '../widgets/app_shell_background.dart';
+import 'library_album_screen.dart';
 import 'local_player_screen.dart';
 import 'video_player_screen.dart';
 
@@ -59,25 +62,27 @@ class _LibraryScreenState extends State<LibraryScreen>
       body: AppShellBackground(
         child: SafeArea(
           bottom: false,
-          child: Column(
-            children: [
-              _buildHeader(theme),
-              _buildTabBar(theme),
-              Expanded(
-                child: Consumer<LibraryProvider>(
+          child: AppLayout.constrainContent(
+            child: Column(
+              children: [
+                _buildHeader(theme),
+                _buildTabBar(theme),
+                Expanded(
+                  child: Consumer<LibraryProvider>(
                   builder: (context, provider, _) {
                     return TabBarView(
                       controller: _tabController,
                       children: [
                         _buildMediaGrid(provider, isVideo: false),
                         _buildMediaGrid(provider, isVideo: true),
-                        _buildFoldersView(theme),
+                        _buildFoldersView(theme, provider),
                       ],
                     );
                   },
                 ),
               ),
             ],
+            ),
           ),
         ),
       ),
@@ -85,8 +90,9 @@ class _LibraryScreenState extends State<LibraryScreen>
   }
 
   Widget _buildHeader(ThemeData theme) {
+    final h = AppLayout.horizontalPadding(context);
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+      padding: EdgeInsets.fromLTRB(h, 16, h, 12),
       child: Column(
         children: [
           Row(
@@ -94,13 +100,15 @@ class _LibraryScreenState extends State<LibraryScreen>
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.tertiary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(16),
+                  color: theme.colorScheme.primaryContainer.withValues(
+                    alpha: theme.brightness == Brightness.dark ? 0.4 : 1,
+                  ),
+                  borderRadius: BorderRadius.circular(14),
                 ),
                 child: Icon(
                   CupertinoIcons.music_albums_fill,
-                  color: theme.colorScheme.tertiary,
-                  size: 28,
+                  color: theme.colorScheme.primary,
+                  size: 26,
                 ),
               ),
               const SizedBox(width: 16),
@@ -108,13 +116,16 @@ class _LibraryScreenState extends State<LibraryScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Your library',
-                    style: theme.textTheme.headlineMedium?.copyWith(fontSize: 28),
+                    'Library',
+                    style: theme.textTheme.headlineMedium?.copyWith(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                   Consumer<LibraryProvider>(
                     builder: (context, provider, _) {
                       return Text(
-                        '${provider.audioFiles.length} tracks · ${provider.videoFiles.length} videos',
+                        '${provider.audioFiles.length} tracks · ${provider.videoFiles.length} videos · ${provider.audioAlbums.length + provider.videoAlbums.length} folders',
                         style: theme.textTheme.bodyMedium?.copyWith(
                           color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
                         ),
@@ -126,8 +137,8 @@ class _LibraryScreenState extends State<LibraryScreen>
               const Spacer(),
               Container(
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.45)),
+                  borderRadius: BorderRadius.circular(12),
                 ),
                 child: Consumer<LibraryProvider>(
                   builder: (context, provider, _) {
@@ -151,54 +162,23 @@ class _LibraryScreenState extends State<LibraryScreen>
               ),
             ],
           ),
-          const SizedBox(height: 24),
-          Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(24),
-              boxShadow: [
-                BoxShadow(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.15),
-                  blurRadius: 25,
-                  offset: const Offset(0, 8),
-                ),
-              ],
-            ),
-            child: TextField(
-              controller: _searchController,
-              onChanged: _onSearchChanged,
-              style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 16),
-              decoration: InputDecoration(
-                hintText: 'Search your collection...',
-                hintStyle: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
-                prefixIcon: Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: Icon(CupertinoIcons.search, color: theme.colorScheme.tertiary),
-                ),
-                filled: true,
-                fillColor: theme.cardColor.withValues(alpha: 0.8),
-                contentPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide.none,
-                ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide(color: theme.colorScheme.onSurface.withValues(alpha: 0.05)),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(24),
-                  borderSide: BorderSide(color: theme.colorScheme.tertiary, width: 1.5),
-                ),
-                suffixIcon: _searchQuery.isNotEmpty
-                    ? IconButton(
-                        icon: Icon(CupertinoIcons.clear, color: theme.colorScheme.onSurface.withValues(alpha: 0.7)),
-                        onPressed: () {
-                          _searchController.clear();
-                          _onSearchChanged('');
-                        },
-                      )
-                    : null,
-              ),
+          const SizedBox(height: 16),
+          TextField(
+            controller: _searchController,
+            onChanged: _onSearchChanged,
+            style: TextStyle(color: theme.colorScheme.onSurface, fontSize: 16),
+            decoration: InputDecoration(
+              hintText: 'Search your collection',
+              prefixIcon: const Icon(CupertinoIcons.search),
+              suffixIcon: _searchQuery.isNotEmpty
+                  ? IconButton(
+                      icon: Icon(CupertinoIcons.clear, color: theme.colorScheme.onSurface.withValues(alpha: 0.5)),
+                      onPressed: () {
+                        _searchController.clear();
+                        _onSearchChanged('');
+                      },
+                    )
+                  : null,
             ),
           ),
         ],
@@ -207,30 +187,29 @@ class _LibraryScreenState extends State<LibraryScreen>
   }
 
   Widget _buildTabBar(ThemeData theme) {
+    final h = AppLayout.horizontalPadding(context);
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
-      height: 50,
+      margin: EdgeInsets.symmetric(horizontal: h, vertical: 8),
+      height: 44,
       decoration: BoxDecoration(
-        color: theme.colorScheme.onSurface.withValues(alpha: 0.05),
-        borderRadius: BorderRadius.circular(25),
-        border: Border.all(color: theme.colorScheme.onSurface.withValues(alpha: 0.05)),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.65),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.35)),
       ),
       child: TabBar(
         controller: _tabController,
+        splashBorderRadius: BorderRadius.circular(10),
         indicator: BoxDecoration(
-          color: theme.colorScheme.tertiary,
-          borderRadius: BorderRadius.circular(25),
-          boxShadow: [
-            BoxShadow(
-              color: theme.colorScheme.tertiary.withValues(alpha: 0.4),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
+          color: theme.colorScheme.primary,
+          borderRadius: BorderRadius.circular(10),
         ),
-        labelColor: Colors.white,
-        unselectedLabelColor: theme.colorScheme.onSurface.withValues(alpha: 0.6),
-        labelStyle: theme.textTheme.labelLarge?.copyWith(fontSize: 14),
+        labelColor: theme.colorScheme.onPrimary,
+        unselectedLabelColor: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+        labelStyle: theme.textTheme.labelLarge?.copyWith(fontSize: 12, fontWeight: FontWeight.w700),
+        unselectedLabelStyle: theme.textTheme.labelLarge?.copyWith(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+        ),
         indicatorSize: TabBarIndicatorSize.tab,
         dividerColor: Colors.transparent,
         tabs: const [
@@ -260,26 +239,35 @@ class _LibraryScreenState extends State<LibraryScreen>
       return _buildEmptyState(isVideo);
     }
 
-    return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(20, 20, 20, 120),
-      physics: const BouncingScrollPhysics(),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        childAspectRatio: 0.75,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-      ),
-      itemCount: filteredItems.length,
-      itemBuilder: (context, index) {
-        final item = filteredItems[index];
-        return MediaCard(
-          title: item.title,
-          subtitle: item.subtitle,
-          duration: item.duration,
-          thumbnailBytes: item.thumbnailBytes,
-          isVideo: item.isVideo,
-          useDynamicSizing: false,
-          onTap: () => _handleMediaTap(context, item, filteredItems),
+    final h = AppLayout.horizontalPadding(context);
+    return LayoutBuilder(
+      builder: (context, c) {
+        var cross = 2;
+        if (c.maxWidth > 520) cross = 3;
+        if (c.maxWidth > 820) cross = 4;
+        final ratio = cross >= 3 ? 0.72 : 0.75;
+        return GridView.builder(
+          padding: EdgeInsets.fromLTRB(h, 20, h, 120),
+          physics: const BouncingScrollPhysics(),
+          gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+            crossAxisCount: cross,
+            childAspectRatio: ratio,
+            crossAxisSpacing: 16,
+            mainAxisSpacing: 16,
+          ),
+          itemCount: filteredItems.length,
+          itemBuilder: (context, index) {
+            final item = filteredItems[index];
+            return MediaCard(
+              title: item.title,
+              subtitle: item.subtitle,
+              duration: item.duration,
+              thumbnailBytes: item.thumbnailBytes,
+              isVideo: item.isVideo,
+              useDynamicSizing: false,
+              onTap: () => _handleMediaTap(context, item, filteredItems),
+            );
+          },
         );
       },
     );
@@ -372,42 +360,128 @@ class _LibraryScreenState extends State<LibraryScreen>
     );
   }
 
-  Widget _buildFoldersView(ThemeData theme) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(32),
-            decoration: BoxDecoration(
-              color: theme.colorScheme.tertiary.withValues(alpha: 0.1),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  color: theme.colorScheme.tertiary.withValues(alpha: 0.2),
-                  blurRadius: 30,
+  List<MediaAlbum> _filterAlbums(List<MediaAlbum> source) {
+    if (_searchQuery.isEmpty) return source;
+    return source.where((a) {
+      if (a.title.toLowerCase().contains(_searchQuery)) return true;
+      return a.items.any((t) => t.title.toLowerCase().contains(_searchQuery));
+    }).toList();
+  }
+
+  Widget _buildFoldersView(ThemeData theme, LibraryProvider provider) {
+    if (provider.isScanning && provider.audioAlbums.isEmpty && provider.videoFiles.isEmpty) {
+      return _buildLoadingState();
+    }
+
+    final audioAlbums = _filterAlbums(provider.audioAlbums);
+    final videoAlbums = _filterAlbums(provider.videoAlbums);
+
+    if (audioAlbums.isEmpty && videoAlbums.isEmpty) {
+      final message = _searchQuery.isNotEmpty
+          ? 'No folders match "$_searchQuery"'
+          : 'No folders found. Grant media access and scan, or add files on your device.';
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Text(
+                message,
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
                 ),
-              ],
-            ),
-            child: Icon(
-              CupertinoIcons.folder,
-              size: 64,
-              color: theme.colorScheme.tertiary,
+              ),
+              if (_searchQuery.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(top: 16),
+                  child: TextButton.icon(
+                    onPressed: () => provider.scanMedia(),
+                    icon: const Icon(CupertinoIcons.refresh),
+                    label: const Text('Scan library'),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      );
+    }
+
+    final h = AppLayout.horizontalPadding(context);
+    return ListView(
+      padding: EdgeInsets.fromLTRB(h, 12, h, 120),
+      physics: const BouncingScrollPhysics(),
+      children: [
+        if (audioAlbums.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8, left: 4),
+            child: Text(
+              'Audio',
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.5,
+              ),
             ),
           ),
-          const SizedBox(height: 24),
-          Text(
-            'Folders',
-            style: theme.textTheme.headlineSmall,
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Browse by folder — coming soon.',
-            style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-            ),
-          ),
+          ...audioAlbums.map((album) => _folderTile(theme, album, isVideo: false)),
+          if (videoAlbums.isNotEmpty) const SizedBox(height: 20),
         ],
+        if (videoAlbums.isNotEmpty) ...[
+          Padding(
+            padding: const EdgeInsets.only(bottom: 8, left: 4),
+            child: Text(
+              'Video',
+              style: theme.textTheme.titleSmall?.copyWith(
+                color: theme.colorScheme.primary,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+          ...videoAlbums.map((album) => _folderTile(theme, album, isVideo: true)),
+        ],
+      ],
+    );
+  }
+
+  Widget _folderTile(ThemeData theme, MediaAlbum album, {required bool isVideo}) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: ListTile(
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        tileColor: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
+        leading: CircleAvatar(
+          backgroundColor: theme.colorScheme.primaryContainer.withValues(
+            alpha: theme.brightness == Brightness.dark ? 0.35 : 1,
+          ),
+          child: Icon(
+            isVideo ? CupertinoIcons.videocam_fill : CupertinoIcons.folder_fill,
+            color: theme.colorScheme.primary,
+          ),
+        ),
+        title: Text(
+          album.title,
+          maxLines: 2,
+          overflow: TextOverflow.ellipsis,
+          style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
+        ),
+        subtitle: Text(
+          isVideo
+              ? '${album.items.length} ${album.items.length == 1 ? 'video' : 'videos'}'
+              : '${album.items.length} tracks',
+        ),
+        trailing: Icon(CupertinoIcons.chevron_forward, color: theme.colorScheme.onSurface.withValues(alpha: 0.35)),
+        onTap: () {
+          Navigator.push<void>(
+            context,
+            MaterialPageRoute<void>(
+              builder: (context) => LibraryAlbumScreen(album: album, isVideoAlbum: isVideo),
+            ),
+          );
+        },
       ),
     );
   }

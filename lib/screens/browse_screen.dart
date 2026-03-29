@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
+import '../layout/app_layout.dart';
 import '../theme/app_theme.dart';
 import '../widgets/media_card.dart';
 import '../widgets/app_shell_background.dart';
@@ -44,27 +45,58 @@ class _BrowseScreenState extends State<BrowseScreen> {
       body: AppShellBackground(
         child: SafeArea(
           bottom: false,
-          child: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(24, 28, 24, 0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Discover',
-                  style: theme.textTheme.headlineMedium,
+          child: AppLayout.constrainContent(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.fromLTRB(AppLayout.horizontalPadding(context), 24,
+                  AppLayout.horizontalPadding(context), 0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: theme.colorScheme.primaryContainer.withValues(alpha: isDark ? 0.35 : 1),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Icon(
+                        Icons.explore_rounded,
+                        color: theme.colorScheme.primary,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Discover',
+                            style: theme.textTheme.headlineMedium?.copyWith(
+                              height: 1.05,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Search and browse curated gospel channels.',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 6),
-                Text(
-                  'Curated gospel channels & search.',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
-                  ),
-                ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 20),
                 TextField(
                   controller: _searchController,
                   onSubmitted: (query) {
+                    if (query.trim().isEmpty) return;
                     Navigator.push(
                       context,
                       MaterialPageRoute(
@@ -78,19 +110,28 @@ class _BrowseScreenState extends State<BrowseScreen> {
                     fontSize: 16,
                     fontWeight: FontWeight.w500,
                   ),
-                  decoration: InputDecoration(
+                  decoration: const InputDecoration(
                     hintText: 'Search gospel, worship, hymns…',
-                    prefixIcon: Icon(CupertinoIcons.search, color: theme.colorScheme.primary),
-                    filled: true,
-                    fillColor: theme.colorScheme.surface.withValues(
-                      alpha: isDark ? 0.5 : 0.95,
-                    ),
+                    prefixIcon: Icon(CupertinoIcons.search),
                   ),
                 ),
-                const SizedBox(height: 36),
-                Text(
-                  'Categories',
-                  style: theme.textTheme.titleLarge,
+                const SizedBox(height: 28),
+                Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(2),
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Categories',
+                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 _CategoryCard(
@@ -119,10 +160,23 @@ class _BrowseScreenState extends State<BrowseScreen> {
                   onTap: () => _navigateToCategory(context, 'English Gospel'),
                   isDark: isDark,
                 ),
-                const SizedBox(height: 36),
-                Text(
-                  'Random picks',
-                  style: theme.textTheme.titleLarge,
+                const SizedBox(height: 28),
+                Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 20,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(2),
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Text(
+                      'Random picks',
+                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: 16),
                 Consumer<HomeProvider>(
@@ -167,7 +221,8 @@ class _BrowseScreenState extends State<BrowseScreen> {
                   },
                 ),
                 const SizedBox(height: 110),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -210,84 +265,61 @@ class _CategoryCard extends StatelessWidget {
 
     return Material(
       color: Colors.transparent,
-      child: Ink(
-        height: 112,
-        decoration: BoxDecoration(
-          gradient: gradient,
-          borderRadius: BorderRadius.circular(26),
-          boxShadow: [
-            BoxShadow(
-              color: gradient.colors.first.withValues(alpha: isDark ? 0.35 : 0.2),
-              blurRadius: 22,
-              offset: const Offset(0, 12),
-            ),
-          ],
-        ),
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: BorderRadius.circular(26),
-          child: Stack(
-            children: [
-              Positioned(
-                right: -24,
-                top: -24,
-                child: Container(
-                  width: 100,
-                  height: 100,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withValues(alpha: isDark ? 0.12 : 0.45),
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 22),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: iconBg,
-                        borderRadius: BorderRadius.circular(18),
-                      ),
-                      child: Icon(icon, color: isDark ? Colors.white : theme.colorScheme.primary, size: 28),
-                    ),
-                    const SizedBox(width: 18),
-                    Expanded(
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            title,
-                            style: theme.textTheme.titleLarge?.copyWith(
-                              color: onGradient,
-                              fontSize: 18,
-                            ),
-                          ),
-                          const SizedBox(height: 4),
-                          Text(
-                            subtitle,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: onGradient.withValues(alpha: 0.75),
-                              fontWeight: FontWeight.w500,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        color: isDark ? Colors.white.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.06),
-                        shape: BoxShape.circle,
-                      ),
-                      child: Icon(Icons.arrow_forward_rounded, color: onGradient, size: 20),
-                    ),
-                  ],
-                ),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Ink(
+          height: 92,
+          decoration: BoxDecoration(
+            gradient: gradient,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.07),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
               ),
             ],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 18),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: iconBg,
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                  child: Icon(icon, color: isDark ? Colors.white : theme.colorScheme.primary, size: 26),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: theme.textTheme.titleMedium?.copyWith(
+                          color: onGradient,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        subtitle,
+                        style: theme.textTheme.bodySmall?.copyWith(
+                          color: onGradient.withValues(alpha: 0.8),
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(Icons.chevron_right_rounded, color: onGradient.withValues(alpha: 0.7), size: 26),
+              ],
+            ),
           ),
         ),
       ),

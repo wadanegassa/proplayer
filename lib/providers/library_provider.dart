@@ -1,4 +1,5 @@
 import 'package:flutter/foundation.dart';
+import '../models/media_album.dart';
 import '../models/media_item.dart';
 import '../services/local_media_service.dart';
 
@@ -6,12 +7,16 @@ class LibraryProvider with ChangeNotifier {
   final LocalMediaService _localMediaService = LocalMediaService();
 
   List<MediaItem> _audioFiles = [];
+  List<MediaAlbum> _audioAlbums = [];
   List<MediaItem> _videoFiles = [];
+  List<MediaAlbum> _videoAlbums = [];
   bool _isScanning = false;
   String? _error;
 
   List<MediaItem> get audioFiles => _audioFiles;
+  List<MediaAlbum> get audioAlbums => _audioAlbums;
   List<MediaItem> get videoFiles => _videoFiles;
+  List<MediaAlbum> get videoAlbums => _videoAlbums;
   bool get isScanning => _isScanning;
   String? get error => _error;
 
@@ -23,9 +28,12 @@ class LibraryProvider with ChangeNotifier {
     try {
       debugPrint('🔍 Starting media scan...');
       
-      // Scan audio and video files
-      _audioFiles = await _localMediaService.scanLocalMusic();
-      _videoFiles = await _localMediaService.scanLocalVideos();
+      final audioScan = await _localMediaService.scanLocalAudioDetailed();
+      _audioAlbums = audioScan.albums;
+      _audioFiles = audioScan.items;
+      final videoScan = await _localMediaService.scanLocalVideoDetailed();
+      _videoAlbums = videoScan.albums;
+      _videoFiles = videoScan.items;
       
       debugPrint('✅ Scan complete: ${_audioFiles.length} audio, ${_videoFiles.length} video');
       
