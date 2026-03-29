@@ -25,27 +25,41 @@ class HomeProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      // Load history
       _recentlyPlayed = await _historyService.getRecentList();
 
-      // Load random mix if empty
       if (_randomMix.isEmpty) {
         _randomMix = await _youtubeService.fetchRandomMix();
+        if (_randomMix.isEmpty) {
+          await Future<void>.delayed(const Duration(milliseconds: 600));
+          _randomMix = await _youtubeService.fetchRandomMix();
+        }
       }
 
-      // Load local songs
       if (_localSongs.isEmpty) {
-        // Request permission first (assuming permission is handled in main.dart or splash)
-        // For now, just try to fetch
         _localSongs = await _localMediaService.scanLocalMusic();
       }
-
     } catch (e) {
       debugPrint('Error loading home data: $e');
     } finally {
       _isLoading = false;
       notifyListeners();
     }
+  }
+
+  /// Pull-to-refresh: reload YouTube mix, local files, and history.
+  Future<void> refreshHomeData() async {
+    try {
+      _recentlyPlayed = await _historyService.getRecentList();
+      _randomMix = await _youtubeService.fetchRandomMix();
+      if (_randomMix.isEmpty) {
+        await Future<void>.delayed(const Duration(milliseconds: 600));
+        _randomMix = await _youtubeService.fetchRandomMix();
+      }
+      _localSongs = await _localMediaService.scanLocalMusic();
+    } catch (e) {
+      debugPrint('Error refreshing home: $e');
+    }
+    notifyListeners();
   }
 
   Future<void> addToHistory(MediaItem item) async {

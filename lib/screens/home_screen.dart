@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
-import 'package:google_fonts/google_fonts.dart';
+import '../layout/app_layout.dart';
 import '../widgets/media_card.dart';
 import '../widgets/app_shell_background.dart';
+import '../widgets/glass_container.dart';
 import '../providers/home_provider.dart';
-import '../theme/app_theme.dart';
+import '../providers/main_nav_provider.dart';
 import 'video_player_screen.dart';
 import 'local_player_screen.dart';
 import 'search_results_screen.dart';
@@ -29,8 +30,8 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.sizeOf(context).width;
-    final isTablet = screenWidth > 600;
-    final horizontalPadding = isTablet ? 40.0 : 20.0;
+    final isTablet = AppLayout.isTabletWidth(screenWidth);
+    final horizontalPadding = AppLayout.horizontalPadding(context);
     final theme = Theme.of(context);
 
     return Scaffold(
@@ -65,63 +66,67 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 );
               }
-              return CustomScrollView(
-                physics: const BouncingScrollPhysics(),
-                slivers: [
+              return AppLayout.constrainContent(
+                child: RefreshIndicator(
+                  onRefresh: () => context.read<HomeProvider>().refreshHomeData(),
+                  child: CustomScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(
+                      parent: BouncingScrollPhysics(),
+                    ),
+                    slivers: [
                   SliverPadding(
-                    padding: EdgeInsets.fromLTRB(horizontalPadding, 28, horizontalPadding, 0),
+                    padding: EdgeInsets.fromLTRB(horizontalPadding, 20, horizontalPadding, 0),
                     sliver: SliverToBoxAdapter(
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                ShaderMask(
-                                  blendMode: BlendMode.srcIn,
-                                  shaderCallback: (bounds) =>
-                                      AppTheme.accentGradient.createShader(bounds),
-                                  child: Text(
-                                    'PRO',
-                                    style: GoogleFonts.sora(
-                                      fontSize: isTablet ? 14 : 12,
+                      child: GlassContainer(
+                        borderRadius: 16,
+                        padding: const EdgeInsets.fromLTRB(20, 20, 16, 20),
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'PROPLAYER',
+                                    style: theme.textTheme.labelSmall?.copyWith(
+                                      color: theme.colorScheme.primary,
                                       fontWeight: FontWeight.w800,
-                                      letterSpacing: 4,
-                                      color: Colors.white,
+                                      letterSpacing: 2,
                                     ),
                                   ),
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Player',
-                                  style: theme.textTheme.displaySmall?.copyWith(
-                                    fontSize: isTablet ? 40 : 34,
-                                    height: 1.05,
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Your music',
+                                    style: theme.textTheme.displaySmall?.copyWith(
+                                      fontSize: isTablet ? 36 : 30,
+                                      height: 1.05,
+                                      fontWeight: FontWeight.w700,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 8),
-                                Text(
-                                  'Local tracks & streaming in one studio.',
-                                  style: theme.textTheme.bodyMedium?.copyWith(
-                                    color: theme.colorScheme.onSurface.withValues(alpha: 0.55),
-                                    height: 1.35,
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    'Local files and online discovery in one place.',
+                                    style: theme.textTheme.bodyMedium?.copyWith(
+                                      color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                                      height: 1.4,
+                                    ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
-                          ),
-                          _IconChipButton(
-                            icon: Icons.tune_rounded,
-                            onPressed: () => Navigator.pushNamed(context, '/settings'),
-                          ),
-                        ],
+                            _IconChipButton(
+                              icon: Icons.tune_rounded,
+                              onPressed: () => Navigator.pushNamed(context, '/settings'),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ),
 
                   SliverPadding(
-                    padding: EdgeInsets.fromLTRB(horizontalPadding, 28, horizontalPadding, 0),
+                    padding: EdgeInsets.fromLTRB(horizontalPadding, 20, horizontalPadding, 0),
                     sliver: SliverToBoxAdapter(
                       child: TextField(
                         onSubmitted: (query) {
@@ -139,25 +144,23 @@ class _HomeScreenState extends State<HomeScreen> {
                           fontSize: 16,
                           fontWeight: FontWeight.w500,
                         ),
-                        decoration: InputDecoration(
+                        decoration: const InputDecoration(
                           hintText: 'Search artists, titles, albums…',
-                          prefixIcon: Icon(
-                            CupertinoIcons.search,
-                            color: theme.colorScheme.primary,
-                          ),
-                          filled: true,
-                          fillColor: theme.colorScheme.surface.withValues(
-                            alpha: theme.brightness == Brightness.dark ? 0.5 : 0.95,
-                          ),
+                          prefixIcon: Icon(CupertinoIcons.search),
                         ),
                       ),
                     ),
                   ),
 
-                  const SliverToBoxAdapter(child: SizedBox(height: 36)),
+                  const SliverToBoxAdapter(child: SizedBox(height: 28)),
 
                   if (provider.recentlyPlayed.isNotEmpty) ...[
-                    _sectionHeader(context, 'Recently played', horizontalPadding),
+                    _sectionHeader(
+                      context,
+                      'Recently played',
+                      horizontalPadding,
+                      onSeeAll: () => context.read<MainNavProvider>().setIndex(2),
+                    ),
                     SliverToBoxAdapter(
                       child: SizedBox(
                         height: 244,
@@ -197,7 +200,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     const SliverToBoxAdapter(child: SizedBox(height: 28)),
                   ],
 
-                  _sectionHeader(context, 'Explore', horizontalPadding),
+                  _sectionHeader(
+                    context,
+                    'Explore',
+                    horizontalPadding,
+                    onSeeAll: () => context.read<MainNavProvider>().setIndex(1),
+                  ),
                   SliverToBoxAdapter(
                     child: SizedBox(
                       height: 244,
@@ -234,7 +242,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                   const SliverToBoxAdapter(child: SizedBox(height: 28)),
 
-                  _sectionHeader(context, 'On this device', horizontalPadding),
+                  _sectionHeader(
+                    context,
+                    'On this device',
+                    horizontalPadding,
+                    onSeeAll: () => context.read<MainNavProvider>().setIndex(2),
+                  ),
                   if (provider.localSongs.isEmpty)
                     SliverPadding(
                       padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
@@ -242,11 +255,11 @@ class _HomeScreenState extends State<HomeScreen> {
                         child: Container(
                           padding: const EdgeInsets.all(28),
                           decoration: BoxDecoration(
-                            borderRadius: BorderRadius.circular(22),
+                            borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: theme.colorScheme.outline.withValues(alpha: 0.2),
+                              color: theme.colorScheme.outline.withValues(alpha: 0.45),
                             ),
-                            color: theme.colorScheme.surface.withValues(alpha: 0.35),
+                            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.5),
                           ),
                           child: Row(
                             children: [
@@ -270,44 +283,54 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                     )
                   else
-                    SliverPadding(
-                      padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-                      sliver: SliverGrid(
-                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 16,
-                          crossAxisSpacing: 16,
-                          childAspectRatio: 0.74,
-                        ),
-                        delegate: SliverChildBuilderDelegate(
-                          (context, index) {
-                            final song = provider.localSongs[index];
-                            return MediaCard(
-                              title: song.title,
-                              subtitle: song.subtitle,
-                              duration: song.duration,
-                              thumbnailBytes: song.thumbnailBytes,
-                              isVideo: song.isVideo,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => LocalPlayerScreen(
-                                      mediaItem: song,
-                                      playlist: provider.localSongs,
-                                    ),
-                                  ),
+                    SliverLayoutBuilder(
+                      builder: (context, constraints) {
+                        var cross = 2;
+                        if (constraints.crossAxisExtent > 520) cross = 3;
+                        if (constraints.crossAxisExtent > 820) cross = 4;
+                        final ratio = cross >= 3 ? 0.72 : 0.74;
+                        return SliverPadding(
+                          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                          sliver: SliverGrid(
+                            gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: cross,
+                              mainAxisSpacing: 16,
+                              crossAxisSpacing: 16,
+                              childAspectRatio: ratio,
+                            ),
+                            delegate: SliverChildBuilderDelegate(
+                              (context, index) {
+                                final song = provider.localSongs[index];
+                                return MediaCard(
+                                  title: song.title,
+                                  subtitle: song.subtitle,
+                                  duration: song.duration,
+                                  thumbnailBytes: song.thumbnailBytes,
+                                  isVideo: song.isVideo,
+                                  onTap: () {
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder: (context) => LocalPlayerScreen(
+                                          mediaItem: song,
+                                          playlist: provider.localSongs,
+                                        ),
+                                      ),
+                                    );
+                                  },
                                 );
                               },
-                            );
-                          },
-                          childCount: provider.localSongs.length,
-                        ),
-                      ),
+                              childCount: provider.localSongs.length,
+                            ),
+                          ),
+                        );
+                      },
                     ),
                   const SliverToBoxAdapter(child: SizedBox(height: 120)),
-                ],
-              );
+                  ],
+                ),
+              ),
+            );
             },
           ),
         ),
@@ -315,7 +338,12 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _sectionHeader(BuildContext context, String title, double padding) {
+  Widget _sectionHeader(
+    BuildContext context,
+    String title,
+    double padding, {
+    VoidCallback? onSeeAll,
+  }) {
     final theme = Theme.of(context);
     return SliverPadding(
       padding: EdgeInsets.only(left: padding, right: padding, bottom: 16),
@@ -323,37 +351,35 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Row(
           children: [
             Container(
-              width: 5,
-              height: 26,
+              width: 4,
+              height: 22,
               decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(3),
-                gradient: AppTheme.accentGradient,
-                boxShadow: [
-                  BoxShadow(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.45),
-                    blurRadius: 12,
-                  ),
-                ],
+                color: theme.colorScheme.primary,
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
                 title,
-                style: theme.textTheme.headlineSmall?.copyWith(fontSize: 22),
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
-            TextButton(
-              onPressed: () {},
-              style: TextButton.styleFrom(foregroundColor: theme.colorScheme.primary),
-              child: Row(
-                children: [
-                  Text('All', style: theme.textTheme.labelLarge),
-                  const SizedBox(width: 4),
-                  const Icon(Icons.arrow_forward_rounded, size: 18),
-                ],
+            if (onSeeAll != null)
+              TextButton(
+                onPressed: onSeeAll,
+                style: TextButton.styleFrom(foregroundColor: theme.colorScheme.primary),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text('All', style: theme.textTheme.labelLarge),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.arrow_forward_rounded, size: 18),
+                  ],
+                ),
               ),
-            ),
           ],
         ),
       ),
@@ -371,14 +397,18 @@ class _IconChipButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Material(
-      color: theme.colorScheme.surface.withValues(alpha: 0.5),
-      borderRadius: BorderRadius.circular(18),
+      color: Colors.transparent,
       child: InkWell(
         onTap: onPressed,
-        borderRadius: BorderRadius.circular(18),
-        child: Padding(
-          padding: const EdgeInsets.all(14),
-          child: Icon(icon, color: theme.colorScheme.onSurface, size: 22),
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: theme.colorScheme.outline.withValues(alpha: 0.65)),
+            color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+          ),
+          child: Icon(icon, color: theme.colorScheme.onSurface.withValues(alpha: 0.85), size: 22),
         ),
       ),
     );
