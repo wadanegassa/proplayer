@@ -20,23 +20,34 @@ class LibraryProvider with ChangeNotifier {
   bool get isScanning => _isScanning;
   String? get error => _error;
 
-  Future<void> scanMedia() async {
+  Future<void>? _ongoingScan;
+
+  /// Coalesces overlapping calls (e.g. Library open + pull-to-refresh) into one scan.
+  Future<void> scanMedia() {
+    if (_ongoingScan != null) return _ongoingScan!;
+    _ongoingScan = _runScanMedia().whenComplete(() => _ongoingScan = null);
+    return _ongoingScan!;
+  }
+
+  Future<void> _runScanMedia() async {
     _isScanning = true;
     _error = null;
     notifyListeners();
 
     try {
-      debugPrint('🔍 Starting media scan...');
-      
+      if (kDebugMode) debugPrint('🔍 Starting media scan...');
+
       final audioScan = await _localMediaService.scanLocalAudioDetailed();
       _audioAlbums = audioScan.albums;
       _audioFiles = audioScan.items;
       final videoScan = await _localMediaService.scanLocalVideoDetailed();
       _videoAlbums = videoScan.albums;
       _videoFiles = videoScan.items;
-      
-      debugPrint('✅ Scan complete: ${_audioFiles.length} audio, ${_videoFiles.length} video');
-      
+
+      if (kDebugMode) {
+        debugPrint('✅ Scan complete: ${_audioFiles.length} audio, ${_videoFiles.length} video');
+      }
+
       if (_audioFiles.isEmpty && _videoFiles.isEmpty) {
         _error = 'No media files found. Make sure you have granted storage permission.';
       }

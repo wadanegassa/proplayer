@@ -61,6 +61,11 @@ dev_dependencies:
   flutter_launcher_icons: ^0.13.1
   flutter_lints: ^5.0.0
 
+# Patched WebView baseUrl (www.youtube.com) to match YouTube iframe_api postMessage origin.
+dependency_overrides:
+  youtube_player_flutter:
+    path: packages/youtube_player_flutter
+
 flutter_launcher_icons:
   android: true
   ios: true

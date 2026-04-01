@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:flutter/foundation.dart' show kIsWeb, defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
@@ -9,6 +10,7 @@ import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 
 import '../models/media_item.dart';
 import '../providers/home_provider.dart';
+import '../services/youtube_service.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
   final MediaItem mediaItem;
@@ -22,6 +24,8 @@ class VideoPlayerScreen extends StatefulWidget {
 class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   YoutubePlayerController? _youtubeController;
   vp.VideoPlayerController? _localController;
+  /// YouTube via [youtube_explode_dart] + [video_player] (avoids broken WebViews).
+  vp.VideoPlayerController? _youtubeStreamController;
   bool _isLocalVideo = false;
   bool _showControls = true;
   Timer? _hideTimer;
@@ -29,6 +33,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   bool _youtubeReady = false;
   bool _ytPlaying = false;
   bool _localPlaying = false;
+  bool _youtubeStreamPlaying = false;
+  /// True while resolving direct stream or before iframe controller is ready to show.
+  bool _youtubeResolving = false;
   int? _seekFlashSeconds;
   bool _localWide = false;
 
@@ -50,22 +57,76 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
         });
       _localController!.addListener(_onLocalTick);
     } else {
-      _youtubeController = YoutubePlayerController(
-        initialVideoId: widget.mediaItem.id,
-        flags: const YoutubePlayerFlags(
-          autoPlay: true,
-          mute: false,
-          enableCaption: false,
-          forceHD: true,
-          hideControls: true,
-          controlsVisibleAtStart: false,
-        ),
-      )..addListener(_onYoutubeTick);
+      _youtubeResolving = true;
+      _initYoutubePlayback();
     }
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<HomeProvider>(context, listen: false).addToHistory(widget.mediaItem);
     });
+  }
+
+  Future<void> _initYoutubePlayback() async {
+    final raw = widget.mediaItem.id.trim();
+    final videoId = YoutubePlayer.convertUrlToId(raw) ?? raw;
+
+    final yt = YouTubeService();
+    Uri? direct;
+    try {
+      direct = await yt.resolveDirectPlayableUri(videoId);
+    } catch (e) {
+      debugPrint('YouTube resolveDirectPlayableUri: $e');
+    } finally {
+      yt.dispose();
+    }
+
+    if (!mounted) return;
+
+    if (direct != null) {
+      final c = vp.VideoPlayerController.networkUrl(
+        direct,
+        httpHeaders: YouTubeService.directPlaybackHttpHeaders,
+      );
+      try {
+        await c.initialize();
+        if (!mounted) {
+          await c.dispose();
+          return;
+        }
+        _youtubeStreamController = c;
+        _youtubeStreamController!.addListener(_onYoutubeStreamTick);
+        await c.play();
+        setState(() {
+          _youtubeResolving = false;
+          _youtubeStreamPlaying = true;
+        });
+        _startHideTimer();
+        return;
+      } catch (e) {
+        debugPrint('YouTube VideoPlayer failed, falling back to iframe: $e');
+        await c.dispose();
+        _youtubeStreamController = null;
+      }
+    }
+
+    if (!mounted) return;
+
+    final useHybridComposition =
+        kIsWeb || defaultTargetPlatform != TargetPlatform.android;
+    _youtubeController = YoutubePlayerController(
+      initialVideoId: videoId,
+      flags: YoutubePlayerFlags(
+        autoPlay: true,
+        mute: false,
+        enableCaption: false,
+        forceHD: false,
+        hideControls: true,
+        controlsVisibleAtStart: false,
+        useHybridComposition: useHybridComposition,
+      ),
+    )..addListener(_onYoutubeTick);
+
+    setState(() => _youtubeResolving = false);
   }
 
   void _syncSystemChrome() {
@@ -104,6 +165,15 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     }
   }
 
+  void _onYoutubeStreamTick() {
+    if (!mounted || _youtubeStreamController == null) return;
+    final playing = _youtubeStreamController!.value.isPlaying;
+    if (playing != _youtubeStreamPlaying) {
+      _youtubeStreamPlaying = playing;
+      setState(() {});
+    }
+  }
+
   void _startHideTimer() {
     _hideTimer?.cancel();
     _hideTimer = Timer(const Duration(seconds: 4), () {
@@ -124,8 +194,10 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   @override
   void dispose() {
     _youtubeController?.removeListener(_onYoutubeTick);
+    _youtubeStreamController?.removeListener(_onYoutubeStreamTick);
     _localController?.removeListener(_onLocalTick);
     _youtubeController?.dispose();
+    _youtubeStreamController?.dispose();
     _localController?.dispose();
     _hideTimer?.cancel();
     _seekFlashTimer?.cancel();
@@ -139,7 +211,11 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     super.dispose();
   }
 
-  String get _watchUrl => 'https://www.youtube.com/watch?v=${widget.mediaItem.id}';
+  String get _watchUrl {
+    final raw = widget.mediaItem.id.trim();
+    final id = YoutubePlayer.convertUrlToId(raw) ?? raw;
+    return 'https://www.youtube.com/watch?v=$id';
+  }
 
   Future<void> _copyLink() async {
     final text = _isLocalVideo ? widget.mediaItem.id : _watchUrl;
@@ -206,6 +282,11 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     if (_isLocalVideo && _localController != null && _localController!.value.isInitialized) {
       final newPos = _localController!.value.position + Duration(seconds: seconds);
       _localController!.seekTo(newPos);
+    } else if (_youtubeStreamController != null &&
+        _youtubeStreamController!.value.isInitialized) {
+      final newPos =
+          _youtubeStreamController!.value.position + Duration(seconds: seconds);
+      _youtubeStreamController!.seekTo(newPos);
     } else if (_youtubeController != null && _youtubeController!.value.isReady) {
       final current = _youtubeController!.value.position;
       _youtubeController!.seekTo(current + Duration(seconds: seconds));
@@ -224,6 +305,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   bool get _isPlaying {
     if (_isLocalVideo) return _localPlaying;
+    if (_youtubeStreamController != null) return _youtubeStreamPlaying;
     return _ytPlaying;
   }
 
@@ -235,6 +317,14 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
       } else {
         _localController!.play();
         _localPlaying = true;
+      }
+    } else if (_youtubeStreamController != null) {
+      if (_youtubeStreamController!.value.isPlaying) {
+        _youtubeStreamController!.pause();
+        _youtubeStreamPlaying = false;
+      } else {
+        _youtubeStreamController!.play();
+        _youtubeStreamPlaying = true;
       }
     } else if (_youtubeController != null) {
       if (_youtubeController!.value.isPlaying) {
@@ -289,7 +379,20 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
             ColoredBox(
               color: theme.scaffoldBackgroundColor,
               child: Center(
-                child: _isLocalVideo ? _buildLocalVideo(theme) : _buildYouTubePlayer(theme),
+                child: _isLocalVideo
+                    ? _buildLocalVideo(theme)
+                    : _youtubeResolving
+                        ? SizedBox(
+                            width: 48,
+                            height: 48,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 3,
+                              color: theme.colorScheme.primary,
+                            ),
+                          )
+                        : (_youtubeStreamController != null)
+                            ? _buildYoutubeStreamVideo(theme)
+                            : _buildYouTubePlayer(theme),
               ),
             ),
             if (_seekFlashSeconds != null) _buildSeekFlash(theme),
@@ -433,6 +536,44 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     );
   }
 
+  Widget _buildYoutubeStreamVideo(ThemeData theme) {
+    final c = _youtubeStreamController;
+    final cs = theme.colorScheme;
+    if (c == null || !c.value.isInitialized) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          SizedBox(
+            width: 40,
+            height: 40,
+            child: CircularProgressIndicator(strokeWidth: 3, color: cs.primary),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Loading video…',
+            style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+          ),
+        ],
+      );
+    }
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final ar = c.value.aspectRatio > 0 ? c.value.aspectRatio : 16 / 9;
+        var w = constraints.maxWidth;
+        var h = w / ar;
+        if (h > constraints.maxHeight) {
+          h = constraints.maxHeight;
+          w = h * ar;
+        }
+        return SizedBox(
+          width: w,
+          height: h,
+          child: vp.VideoPlayer(c),
+        );
+      },
+    );
+  }
+
   Widget _buildVideoOverlay(ThemeData theme) {
     final cs = theme.colorScheme;
     final on = cs.onSurface;
@@ -542,8 +683,13 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (_isLocalVideo && _localController != null && _localController!.value.isInitialized)
-                      _buildLocalScrubber(theme)
+                    if (_isLocalVideo &&
+                        _localController != null &&
+                        _localController!.value.isInitialized)
+                      _buildVideoPlayerScrubber(theme, _localController!)
+                    else if (_youtubeStreamController != null &&
+                        _youtubeStreamController!.value.isInitialized)
+                      _buildVideoPlayerScrubber(theme, _youtubeStreamController!)
                     else if (!_isLocalVideo && _youtubeController != null)
                       _buildYoutubeScrubber(theme),
                     const SizedBox(height: 4),
@@ -595,8 +741,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     );
   }
 
-  Widget _buildLocalScrubber(ThemeData theme) {
-    final c = _localController!;
+  Widget _buildVideoPlayerScrubber(ThemeData theme, vp.VideoPlayerController c) {
     final cs = theme.colorScheme;
     return ValueListenableBuilder<vp.VideoPlayerValue>(
       valueListenable: c,

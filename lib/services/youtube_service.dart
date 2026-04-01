@@ -2,6 +2,7 @@ import 'dart:math';
 
 import 'package:flutter/foundation.dart';
 import 'package:youtube_explode_dart/youtube_explode_dart.dart';
+
 import '../models/media_item.dart';
 import 'pro_youtube_http_client.dart';
 
@@ -393,6 +394,90 @@ class YouTubeService {
       debugPrint('Error fetching random mix: $e\n$st');
       return [];
     }
+  }
+
+  /// InnerTube clients merged in one manifest fetch (Safari/TV often expose muxed HLS others omit).
+  static final List<YoutubeApiClient> _playbackClients = [
+    YoutubeApiClient.android,
+    YoutubeApiClient.ios,
+    YoutubeApiClient.safari,
+    YoutubeApiClient.androidVr,
+    YoutubeApiClient.tv,
+    YoutubeApiClient.mweb,
+    YoutubeApiClient.mediaConnect,
+  ];
+
+  /// YouTube CDNs frequently reject requests without a browser-like Referer (403 / failed init).
+  static const Map<String, String> directPlaybackHttpHeaders = {
+    'User-Agent':
+        'Mozilla/5.0 (Linux; Android 13) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Mobile Safari/537.36',
+    'Referer': 'https://www.youtube.com/',
+    'Origin': 'https://www.youtube.com',
+  };
+
+  Uri? _pickMuxedOrHlsUrl(StreamManifest manifest) {
+    if (manifest.muxed.isNotEmpty) {
+      return manifest.muxed.withHighestBitrate().url;
+    }
+    final hlsMuxed = manifest.streams.whereType<HlsMuxedStreamInfo>().toList()
+      ..sort((a, b) => b.bitrate.compareTo(a.bitrate));
+    if (hlsMuxed.isNotEmpty) return hlsMuxed.first.url;
+    return null;
+  }
+
+  /// Muxed progressive MP4 (≤360p) or muxed HLS (.m3u8) for [VideoPlayerController.networkUrl].
+  ///
+  /// Bypasses the iframe WebView, which often breaks on low-end GPUs or strict WebView builds.
+  Future<Uri?> resolveDirectPlayableUri(String videoIdOrUrl) async {
+    try {
+      final id = VideoId.fromString(videoIdOrUrl);
+
+      Future<Uri?> manifestUrl(
+        List<YoutubeApiClient> clients, {
+        bool requireWatchPage = true,
+      }) async {
+        final manifest = await _yt.videos.streamsClient.getManifest(
+          id,
+          ytClients: clients,
+          requireWatchPage: requireWatchPage,
+        );
+        return _pickMuxedOrHlsUrl(manifest);
+      }
+
+      try {
+        final u = await manifestUrl(_playbackClients);
+        if (u != null) return u;
+      } catch (e) {
+        debugPrint('YouTube merged manifest: $e');
+      }
+
+      try {
+        final manifest = await _yt.videos.streamsClient.getManifest(id);
+        final u = _pickMuxedOrHlsUrl(manifest);
+        if (u != null) return u;
+      } catch (e) {
+        debugPrint('YouTube default manifest: $e');
+      }
+
+      for (final client in _playbackClients) {
+        try {
+          final u = await manifestUrl([client]);
+          if (u != null) return u;
+        } catch (e) {
+          debugPrint('YouTube manifest single client: $e');
+        }
+      }
+
+      try {
+        final u = await manifestUrl(_playbackClients, requireWatchPage: false);
+        if (u != null) return u;
+      } catch (e) {
+        debugPrint('YouTube merged manifest (no watch page): $e');
+      }
+    } catch (e, st) {
+      debugPrint('resolveDirectPlayableUri failed: $e\n$st');
+    }
+    return null;
   }
 
   void dispose() {
