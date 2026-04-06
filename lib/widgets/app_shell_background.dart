@@ -17,7 +17,7 @@ class AppShellBackground extends StatelessWidget {
       children: [
         DecoratedBox(
           decoration: BoxDecoration(
-            gradient: isDark ? AppTheme.pageDark : AppTheme.pageLight,
+            color: isDark ? AppTheme.pageDark : AppTheme.pageLight,
           ),
         ),
         Positioned(
