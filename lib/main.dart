@@ -50,7 +50,7 @@ class ProPlayer extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'ProPlayer',
-          theme: AppTheme.lightTheme,
+          theme: AppTheme.darkTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: themeProvider.themeMode,
           home: const PermissionHandlerScreen(),
@@ -99,7 +99,7 @@ class _PermissionHandlerScreenState extends State<PermissionHandlerScreen> {
       return Scaffold(
         body: Container(
           decoration: BoxDecoration(
-            gradient: theme.brightness == Brightness.dark
+            color: theme.brightness == Brightness.dark
                 ? AppTheme.pageDark
                 : AppTheme.pageLight,
           ),
@@ -133,7 +133,7 @@ class _PermissionHandlerScreenState extends State<PermissionHandlerScreen> {
       return Scaffold(
         body: Container(
           decoration: BoxDecoration(
-            gradient: theme.brightness == Brightness.dark
+            color: theme.brightness == Brightness.dark
                 ? AppTheme.pageDark
                 : AppTheme.pageLight,
           ),
