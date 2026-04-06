@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:provider/provider.dart';
-import '../layout/app_layout.dart';
 import '../theme/app_theme.dart';
+import '../widgets/neumorphic_widgets.dart';
 import '../widgets/media_card.dart';
-import '../widgets/app_shell_background.dart';
-import '../providers/browser_provider.dart';
 import '../providers/home_provider.dart';
+import '../providers/browser_provider.dart';
 import 'browser_results_screen.dart';
 import 'video_player_screen.dart';
 
@@ -21,14 +19,6 @@ class _BrowseScreenState extends State<BrowseScreen> {
   final TextEditingController _searchController = TextEditingController();
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<HomeProvider>(context, listen: false).loadHomeData();
-    });
-  }
-
-  @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
@@ -37,194 +27,160 @@ class _BrowseScreenState extends State<BrowseScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
+    final isTablet = MediaQuery.sizeOf(context).width > 600;
+    final horizontalPadding = isTablet ? 32.0 : 20.0;
 
     return Scaffold(
-      extendBody: true,
-      backgroundColor: Colors.transparent,
-      body: AppShellBackground(
-        child: SafeArea(
-          bottom: false,
-          child: AppLayout.constrainContent(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: EdgeInsets.fromLTRB(AppLayout.horizontalPadding(context), 24,
-                  AppLayout.horizontalPadding(context), 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                Row(
+      backgroundColor: AppTheme.background,
+      body: SafeArea(
+        child: CustomScrollView(
+          physics: const BouncingScrollPhysics(),
+          slivers: [
+            // —— HEADER ———————————————————————————————————————————————
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(horizontalPadding, 40, horizontalPadding, 20),
+                child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: theme.colorScheme.primaryContainer.withValues(alpha: isDark ? 0.35 : 1),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Icon(
-                        Icons.explore_rounded,
-                        color: theme.colorScheme.primary,
-                        size: 24,
+                    Text(
+                      'BROWSE',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: AppTheme.brand,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 4,
                       ),
                     ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Discover',
-                            style: theme.textTheme.headlineMedium?.copyWith(
-                              height: 1.05,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          Text(
-                            'Search and browse curated gospel channels.',
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              color: theme.colorScheme.onSurface.withValues(alpha: 0.5),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                TextField(
-                  controller: _searchController,
-                  onSubmitted: (query) {
-                    if (query.trim().isEmpty) return;
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) => BrowserResultsScreen(category: 'Search: $query'),
-                      ),
-                    );
-                    Provider.of<BrowserProvider>(context, listen: false).search(query);
-                  },
-                  style: TextStyle(
-                    color: theme.colorScheme.onSurface,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
-                  decoration: const InputDecoration(
-                    hintText: 'Search gospel, worship, hymns…',
-                    prefixIcon: Icon(CupertinoIcons.search),
-                  ),
-                ),
-                const SizedBox(height: 28),
-                Row(
-                  children: [
-                    Container(
-                      width: 4,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(2),
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
+                    const SizedBox(height: 4),
                     Text(
                       'Categories',
-                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
+                      style: theme.textTheme.displaySmall?.copyWith(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                      ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 16),
-                _CategoryCard(
-                  title: 'Amharic Gospel',
-                  subtitle: '150+ songs',
-                  gradient: isDark ? AppTheme.categorySunset : AppTheme.categorySunsetSoft,
-                  icon: Icons.music_note_rounded,
-                  onTap: () => _navigateToCategory(context, 'Amharic Gospel'),
-                  isDark: isDark,
-                ),
-                const SizedBox(height: 14),
-                _CategoryCard(
-                  title: 'Afaan Oromo Gospel',
-                  subtitle: '120+ songs',
-                  gradient: isDark ? AppTheme.categoryOcean : AppTheme.categoryOceanSoft,
-                  icon: Icons.library_music_rounded,
-                  onTap: () => _navigateToCategory(context, 'Afaan Oromo Gospel'),
-                  isDark: isDark,
-                ),
-                const SizedBox(height: 14),
-                _CategoryCard(
-                  title: 'English Gospel',
-                  subtitle: '200+ songs',
-                  gradient: isDark ? AppTheme.categoryViolet : AppTheme.categoryVioletSoft,
-                  icon: Icons.album_rounded,
-                  onTap: () => _navigateToCategory(context, 'English Gospel'),
-                  isDark: isDark,
-                ),
-                const SizedBox(height: 28),
-                Row(
-                  children: [
-                    Container(
-                      width: 4,
-                      height: 20,
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(2),
-                        color: theme.colorScheme.primary,
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    Text(
-                      'Random picks',
-                      style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w700),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                Consumer<HomeProvider>(
-                  builder: (context, homeProvider, _) {
-                    if (homeProvider.randomMix.isEmpty) {
-                      return SizedBox(
-                        height: 200,
-                        child: Center(child: CircularProgressIndicator(color: theme.colorScheme.primary)),
-                      );
-                    }
-                    return SizedBox(
-                      height: 244,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        physics: const BouncingScrollPhysics(),
-                        itemCount: homeProvider.randomMix.length,
-                        itemBuilder: (context, index) {
-                          final item = homeProvider.randomMix[index];
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 14),
-                            child: MediaCard(
-                              title: item.title,
-                              subtitle: item.subtitle,
-                              duration: item.duration,
-                              thumbnailBytes: item.thumbnailBytes,
-                              imageUrl: item.thumbnail,
-                              showYouTubeIcon: true,
-                              isVideo: true,
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => VideoPlayerScreen(mediaItem: item),
-                                  ),
-                                );
-                              },
-                            ),
-                          );
-                        },
-                      ),
-                    );
-                  },
-                ),
-                const SizedBox(height: 110),
-                ],
               ),
             ),
-          ),
+
+            // —— SEARCH BAR ———————————————————————————————————————————
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                child: NeumorphicContainer(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  borderRadius: 20,
+                  depth: -6, // Recessed for input
+                  child: TextField(
+                    controller: _searchController,
+                    onSubmitted: (query) {
+                      if (query.trim().isEmpty) return;
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => BrowserResultsScreen(category: 'Search: $query'),
+                        ),
+                      );
+                      Provider.of<BrowserProvider>(context, listen: false).search(query);
+                    },
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
+                    decoration: const InputDecoration(
+                      hintText: 'Search gospel, worship, hymns…',
+                      hintStyle: TextStyle(color: Colors.white24),
+                      prefixIcon: Icon(Icons.search_rounded, color: Colors.white54),
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            // —— CATEGORIES ———————————————————————————————————————————
+            SliverPadding(
+              padding: EdgeInsets.fromLTRB(horizontalPadding, 32, horizontalPadding, 0),
+              sliver: SliverGrid(
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 2,
+                  crossAxisSpacing: 16,
+                  mainAxisSpacing: 16,
+                  childAspectRatio: 1.4,
+                ),
+                delegate: SliverChildListDelegate([
+                  _CategoryItem(
+                    title: 'Amharic',
+                    icon: Icons.music_note_rounded,
+                    onTap: () => _navigateToCategory(context, 'Amharic Gospel'),
+                  ),
+                  _CategoryItem(
+                    title: 'Oromo',
+                    icon: Icons.library_music_rounded,
+                    onTap: () => _navigateToCategory(context, 'Afaan Oromo Gospel'),
+                  ),
+                  _CategoryItem(
+                    title: 'English',
+                    icon: Icons.album_rounded,
+                    onTap: () => _navigateToCategory(context, 'English Gospel'),
+                  ),
+                  _CategoryItem(
+                    title: 'Worship',
+                    icon: Icons.auto_awesome_rounded,
+                    onTap: () => _navigateToCategory(context, 'Worship'),
+                  ),
+                ]),
+              ),
+            ),
+
+            // —— TOP PICKS —————————————————————————————————————————————
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(horizontalPadding, 40, horizontalPadding, 20),
+                child: Text(
+                  'Top Picks',
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                ),
+              ),
+            ),
+
+            SliverToBoxAdapter(
+              child: Consumer<HomeProvider>(
+                builder: (context, homeProvider, _) {
+                  if (homeProvider.randomMix.isEmpty) {
+                    return const Center(child: CircularProgressIndicator(color: AppTheme.brand));
+                  }
+                  return SizedBox(
+                    height: 240,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      padding: EdgeInsets.only(left: horizontalPadding),
+                      physics: const BouncingScrollPhysics(),
+                      itemCount: homeProvider.randomMix.length,
+                      itemBuilder: (context, index) {
+                        final item = homeProvider.randomMix[index];
+                        return MediaCard(
+                          title: item.title,
+                          subtitle: item.subtitle,
+                          imageUrl: item.thumbnail,
+                          isVideo: true,
+                          showYouTubeIcon: true,
+                          onTap: () => Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => VideoPlayerScreen(mediaItem: item),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  );
+                },
+              ),
+            ),
+
+            const SliverToBoxAdapter(child: SizedBox(height: 120)),
+          ],
         ),
       ),
     );
@@ -240,87 +196,30 @@ class _BrowseScreenState extends State<BrowseScreen> {
   }
 }
 
-class _CategoryCard extends StatelessWidget {
-  const _CategoryCard({
-    required this.title,
-    required this.subtitle,
-    required this.gradient,
-    required this.icon,
-    required this.onTap,
-    required this.isDark,
-  });
-
+class _CategoryItem extends StatelessWidget {
+  const _CategoryItem({required this.title, required this.icon, required this.onTap});
   final String title;
-  final String subtitle;
-  final LinearGradient gradient;
   final IconData icon;
   final VoidCallback onTap;
-  final bool isDark;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final onGradient = isDark ? Colors.white : AppTheme.inkBody;
-    final iconBg = isDark ? Colors.white.withValues(alpha: 0.16) : Colors.white;
-
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(16),
-        child: Ink(
-          height: 92,
-          decoration: BoxDecoration(
-            gradient: gradient,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.07),
-                blurRadius: 10,
-                offset: const Offset(0, 4),
-              ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 18),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: iconBg,
-                    borderRadius: BorderRadius.circular(14),
-                  ),
-                  child: Icon(icon, color: isDark ? Colors.white : theme.colorScheme.primary, size: 26),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          color: onGradient,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        subtitle,
-                        style: theme.textTheme.bodySmall?.copyWith(
-                          color: onGradient.withValues(alpha: 0.8),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                Icon(Icons.chevron_right_rounded, color: onGradient.withValues(alpha: 0.7), size: 26),
-              ],
+    return GestureDetector(
+      onTap: onTap,
+      child: NeumorphicContainer(
+        padding: const EdgeInsets.all(16),
+        borderRadius: 24,
+        depth: 8,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, color: AppTheme.brand, size: 32),
+            const SizedBox(height: 8),
+            Text(
+              title,
+              style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
             ),
-          ),
+          ],
         ),
       ),
     );
