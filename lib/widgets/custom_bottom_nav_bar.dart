@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import '../theme/app_theme.dart';
+import 'neumorphic_widgets.dart';
 
-/// Full-width bar: no outer padding, no corner radius, top divider only.
 class CustomBottomNavBar extends StatelessWidget {
   const CustomBottomNavBar({
     super.key,
@@ -19,57 +20,55 @@ class CustomBottomNavBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return Material(
-      color: theme.colorScheme.surface,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: theme.colorScheme.surface,
-          border: Border(
-            top: BorderSide(color: theme.colorScheme.outline.withValues(alpha: 0.2)),
-          ),
-        ),
-        child: SafeArea(
-          top: false,
-          minimum: EdgeInsets.zero,
-          child: SizedBox(
-            height: kBottomNavigationBarHeight,
-            child: Row(
-              children: List.generate(_items.length, (i) {
-                final item = _items[i];
-                final selected = currentIndex == i;
-                return Expanded(
-                  child: InkWell(
-                    onTap: () => onTap(i),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          item.icon,
-                          size: 24,
-                          color: selected
-                              ? theme.colorScheme.primary
-                              : theme.colorScheme.onSurface.withValues(alpha: 0.45),
-                        ),
-                        const SizedBox(height: 2),
-                        Text(
-                          item.label,
-                          style: theme.textTheme.labelSmall?.copyWith(
-                            fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
-                            fontSize: 11,
-                            color: selected
-                                ? theme.colorScheme.primary
-                                : theme.colorScheme.onSurface.withValues(alpha: 0.42),
-                          ),
-                        ),
-                      ],
+    final bottomPadding = MediaQuery.paddingOf(context).bottom;
+    
+    return Padding(
+      padding: EdgeInsets.fromLTRB(24, 8, 24, bottomPadding > 0 ? bottomPadding : 20),
+      child: NeumorphicContainer(
+        height: 72,
+        borderRadius: 30,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        depth: 12,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: List.generate(_items.length, (i) {
+            final item = _items[i];
+            final selected = currentIndex == i;
+            
+            return GestureDetector(
+              onTap: () => onTap(i),
+              behavior: HitTestBehavior.opaque,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 300),
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(20),
+                  color: selected ? AppTheme.brand.withValues(alpha: 0.1) : Colors.transparent,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      item.icon,
+                      size: selected ? 26 : 24,
+                      color: selected ? AppTheme.brand : Colors.white24,
                     ),
-                  ),
-                );
-              }),
-            ),
-          ),
+                    if (selected) ...[
+                      const SizedBox(height: 4),
+                      Container(
+                        width: 4,
+                        height: 4,
+                        decoration: const BoxDecoration(
+                          color: AppTheme.brand,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            );
+          }),
         ),
       ),
     );
