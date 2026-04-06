@@ -11,6 +11,8 @@ import 'package:youtube_player_flutter/youtube_player_flutter.dart';
 import '../models/media_item.dart';
 import '../providers/home_provider.dart';
 import '../services/youtube_service.dart';
+import '../theme/app_theme.dart';
+import '../widgets/neumorphic_widgets.dart';
 
 class VideoPlayerScreen extends StatefulWidget {
   final MediaItem mediaItem;
@@ -37,7 +39,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   /// True while resolving direct stream or before iframe controller is ready to show.
   bool _youtubeResolving = false;
   int? _seekFlashSeconds;
-  bool _localWide = false;
 
   @override
   void initState() {
@@ -184,11 +185,6 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   void _touchUi() {
     setState(() => _showControls = true);
     _startHideTimer();
-  }
-
-  void _toggleControls() {
-    setState(() => _showControls = !_showControls);
-    if (_showControls) _startHideTimer();
   }
 
   @override
@@ -339,529 +335,271 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
     _touchUi();
   }
 
-  Future<void> _toggleLocalWide() async {
-    if (_localWide) {
-      await SystemChrome.setPreferredOrientations([
-        DeviceOrientation.portraitUp,
-        DeviceOrientation.portraitDown,
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
-      ]);
-    } else {
-      await SystemChrome.setPreferredOrientations([
-        DeviceOrientation.landscapeLeft,
-        DeviceOrientation.landscapeRight,
-      ]);
-    }
-    if (mounted) setState(() => _localWide = !_localWide);
-    _touchUi();
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
-      body: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: _toggleControls,
-        onDoubleTapDown: (details) {
-          final width = MediaQuery.sizeOf(context).width;
-          if (details.globalPosition.dx < width / 2) {
-            _seekRelative(-10);
-          } else {
-            _seekRelative(10);
-          }
-        },
-        child: Stack(
-          fit: StackFit.expand,
+      backgroundColor: AppTheme.background,
+      body: SafeArea(
+        child: Column(
           children: [
-            ColoredBox(
-              color: theme.scaffoldBackgroundColor,
-              child: Center(
-                child: _isLocalVideo
-                    ? _buildLocalVideo(theme)
-                    : _youtubeResolving
-                        ? SizedBox(
-                            width: 48,
-                            height: 48,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 3,
-                              color: theme.colorScheme.primary,
-                            ),
-                          )
-                        : (_youtubeStreamController != null)
-                            ? _buildYoutubeStreamVideo(theme)
-                            : _buildYouTubePlayer(theme),
-              ),
-            ),
-            if (_seekFlashSeconds != null) _buildSeekFlash(theme),
-            AnimatedOpacity(
-              opacity: _showControls ? 1 : 0,
-              duration: const Duration(milliseconds: 220),
-              curve: Curves.easeOut,
-              child: IgnorePointer(
-                ignoring: !_showControls,
-                child: _buildVideoOverlay(theme),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildSeekFlash(ThemeData theme) {
-    final forward = _seekFlashSeconds! > 0;
-    return Positioned.fill(
-      child: IgnorePointer(
-        child: Align(
-          alignment: forward ? Alignment.centerRight : Alignment.centerLeft,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20),
-            child: _seekFlashSide(forward, theme),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _seekFlashSide(bool forward, ThemeData theme) {
-    final cs = theme.colorScheme;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-      decoration: BoxDecoration(
-        color: cs.surface.withValues(alpha: 0.92),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: cs.primary.withValues(alpha: 0.65)),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            forward ? Icons.fast_forward_rounded : Icons.fast_rewind_rounded,
-            color: cs.primary,
-            size: 40,
-          ),
-          const SizedBox(height: 6),
-          Text(
-            forward ? '+10s' : '-10s',
-            style: theme.textTheme.titleSmall?.copyWith(
-              color: cs.onSurface,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildYouTubePlayer(ThemeData theme) {
-    final c = _youtubeController;
-    final cs = theme.colorScheme;
-    if (c == null) {
-      return SizedBox(
-        width: 40,
-        height: 40,
-        child: CircularProgressIndicator(strokeWidth: 3, color: cs.primary),
-      );
-    }
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        const ar = 16 / 9;
-        var w = constraints.maxWidth;
-        var h = w / ar;
-        if (h > constraints.maxHeight) {
-          h = constraints.maxHeight;
-          w = h * ar;
-        }
-        return SizedBox(
-          width: w,
-          height: h,
-          child: YoutubePlayerBuilder(
-            player: YoutubePlayer(
-              controller: c,
-              width: w,
-              aspectRatio: ar,
-              showVideoProgressIndicator: false,
-              progressColors: ProgressBarColors(
-                playedColor: cs.primary,
-                handleColor: cs.primary,
-                bufferedColor: cs.onSurface.withValues(alpha: 0.28),
-                backgroundColor: cs.onSurface.withValues(alpha: 0.1),
-              ),
-            ),
-            builder: (context, player) => player,
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildLocalVideo(ThemeData theme) {
-    final c = _localController;
-    final cs = theme.colorScheme;
-    if (c == null || !c.value.isInitialized) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: 40,
-            height: 40,
-            child: CircularProgressIndicator(strokeWidth: 3, color: cs.primary),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Loading…',
-            style: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-          ),
-        ],
-      );
-    }
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final ar = c.value.aspectRatio;
-        var w = constraints.maxWidth;
-        var h = w / ar;
-        if (h > constraints.maxHeight) {
-          h = constraints.maxHeight;
-          w = h * ar;
-        }
-        return SizedBox(
-          width: w,
-          height: h,
-          child: vp.VideoPlayer(c),
-        );
-      },
-    );
-  }
-
-  Widget _buildYoutubeStreamVideo(ThemeData theme) {
-    final c = _youtubeStreamController;
-    final cs = theme.colorScheme;
-    if (c == null || !c.value.isInitialized) {
-      return Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          SizedBox(
-            width: 40,
-            height: 40,
-            child: CircularProgressIndicator(strokeWidth: 3, color: cs.primary),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Loading video…',
-            style: theme.textTheme.bodyMedium?.copyWith(color: theme.colorScheme.onSurfaceVariant),
-          ),
-        ],
-      );
-    }
-    return LayoutBuilder(
-      builder: (context, constraints) {
-        final ar = c.value.aspectRatio > 0 ? c.value.aspectRatio : 16 / 9;
-        var w = constraints.maxWidth;
-        var h = w / ar;
-        if (h > constraints.maxHeight) {
-          h = constraints.maxHeight;
-          w = h * ar;
-        }
-        return SizedBox(
-          width: w,
-          height: h,
-          child: vp.VideoPlayer(c),
-        );
-      },
-    );
-  }
-
-  Widget _buildVideoOverlay(ThemeData theme) {
-    final cs = theme.colorScheme;
-    final on = cs.onSurface;
-    final dim = cs.onSurfaceVariant;
-    return Stack(
-      fit: StackFit.expand,
-      children: [
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  cs.surface.withValues(alpha: 0.94),
-                  cs.surface.withValues(alpha: 0.55),
-                  Colors.transparent,
-                ],
-              ),
-            ),
-            child: SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 4),
-                child: Row(
-                  children: [
-                    IconButton(
-                      icon: Icon(Icons.arrow_back_ios_new_rounded, color: on, size: 22),
-                      onPressed: () => Navigator.pop(context),
-                    ),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            widget.mediaItem.title,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              color: on,
-                              fontWeight: FontWeight.w600,
-                              height: 1.2,
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            _isLocalVideo ? 'Local · ${widget.mediaItem.subtitle}' : 'YouTube · ${widget.mediaItem.subtitle}',
-                            style: theme.textTheme.bodySmall?.copyWith(color: dim),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.more_vert_rounded, color: on),
-                      onPressed: _showVideoMenu,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-        if (!_isPlaying)
-          Center(
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: _togglePlayPause,
-                customBorder: const CircleBorder(),
-                child: Ink(
-                  width: 80,
-                  height: 80,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: cs.primary,
+            // —— HEADER ———————————————————————————————————————————————
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  NeumorphicButton(
+                    size: 44,
+                    onPressed: () => Navigator.pop(context),
+                    child: const Icon(Icons.arrow_back_rounded, color: Colors.white70),
                   ),
-                  child: Icon(Icons.play_arrow_rounded, color: cs.onPrimary, size: 52),
-                ),
-              ),
-            ),
-          ),
-        Positioned(
-          left: 0,
-          right: 0,
-          bottom: 0,
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.bottomCenter,
-                end: Alignment.topCenter,
-                colors: [
-                  cs.surface.withValues(alpha: 0.96),
-                  cs.surface.withValues(alpha: 0.6),
-                  Colors.transparent,
+                  Expanded(
+                    child: Column(
+                      children: [
+                        Text(
+                          'VIDEO PLAYER',
+                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                            color: Colors.white38,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 2,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.mediaItem.title,
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
+                    ),
+                  ),
+                  NeumorphicButton(
+                    size: 44,
+                    onPressed: _showVideoMenu,
+                    child: const Icon(Icons.menu_rounded, color: Colors.white70),
+                  ),
                 ],
               ),
             ),
-            child: SafeArea(
-              top: false,
+
+            const Spacer(),
+
+            // —— VIDEO PLAYER AREA —————————————————————————————————————
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: NeumorphicContainer(
+                width: double.infinity,
+                height: 220,
+                borderRadius: 24,
+                padding: const EdgeInsets.all(8),
+                depth: 12,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(16),
+                  child: GestureDetector(
+                    onTap: _touchUi,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Center(
+                          child: _isLocalVideo
+                              ? _buildLocalVideo(theme)
+                              : _youtubeResolving
+                                  ? const CircularProgressIndicator(color: AppTheme.brand)
+                                  : (_youtubeStreamController != null)
+                                      ? _buildYoutubeStreamVideo(theme)
+                                      : _buildYouTubePlayer(theme),
+                        ),
+                        if (_seekFlashSeconds != null)
+                          Container(
+                            color: Colors.black26,
+                            child: Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    _seekFlashSeconds! > 0 ? Icons.fast_forward_rounded : Icons.fast_rewind_rounded,
+                                    color: Colors.white,
+                                    size: 48,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    '${_seekFlashSeconds!.abs()}s',
+                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+            const Spacer(),
+
+            // —— METADATA —————————————————————————————————————————————
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 40),
+              child: Column(
+                children: [
+                  Text(
+                    widget.mediaItem.title,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w800,
+                      fontSize: 22,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    widget.mediaItem.subtitle,
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      color: Colors.white38,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const Spacer(),
+
+            // —— CONTROLS & SLIDER —————————————————————————————————————
+            AnimatedOpacity(
+              opacity: _showControls ? 1.0 : 0.0,
+              duration: const Duration(milliseconds: 300),
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(8, 20, 8, 4),
+                padding: const EdgeInsets.symmetric(horizontal: 32),
                 child: Column(
-                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    if (_isLocalVideo &&
-                        _localController != null &&
-                        _localController!.value.isInitialized)
-                      _buildVideoPlayerScrubber(theme, _localController!)
-                    else if (_youtubeStreamController != null &&
-                        _youtubeStreamController!.value.isInitialized)
-                      _buildVideoPlayerScrubber(theme, _youtubeStreamController!)
-                    else if (!_isLocalVideo && _youtubeController != null)
-                      _buildYoutubeScrubber(theme),
-                    const SizedBox(height: 4),
+                    _buildScrubber(theme),
+                    const SizedBox(height: 32),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        IconButton(
-                          icon: Icon(Icons.replay_10_rounded, color: on, size: 32),
+                        NeumorphicButton(
+                          size: 56,
                           onPressed: () => _seekRelative(-10),
+                          child: const Icon(Icons.replay_10_rounded, color: Colors.white70),
                         ),
-                        IconButton(
-                          icon: Icon(
-                            _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                            color: on,
-                            size: 40,
-                          ),
+                        NeumorphicButton(
+                          size: 72,
+                          isAccent: true,
                           onPressed: _togglePlayPause,
-                        ),
-                        IconButton(
-                          icon: Icon(Icons.forward_10_rounded, color: on, size: 32),
-                          onPressed: () => _seekRelative(10),
-                        ),
-                        if (_isLocalVideo)
-                          IconButton(
-                            icon: Icon(
-                              _localWide ? Icons.stay_current_portrait_rounded : Icons.screen_rotation_rounded,
-                              color: on,
-                              size: 24,
-                            ),
-                            onPressed: _toggleLocalWide,
-                          )
-                        else
-                          IconButton(
-                            icon: Icon(Icons.fullscreen_rounded, color: on, size: 26),
-                            onPressed: () {
-                              _youtubeController?.toggleFullScreenMode();
-                              _touchUi();
-                            },
+                          child: Icon(
+                            _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                            size: 34,
+                            color: Colors.white,
                           ),
+                        ),
+                        NeumorphicButton(
+                          size: 56,
+                          onPressed: () => _seekRelative(10),
+                          child: const Icon(Icons.forward_10_rounded, color: Colors.white70),
+                        ),
                       ],
                     ),
                   ],
                 ),
               ),
             ),
-          ),
+
+            const Spacer(flex: 2),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildLocalVideo(ThemeData theme) {
+    if (_localController == null || !_localController!.value.isInitialized) {
+      return const CircularProgressIndicator(color: AppTheme.brand);
+    }
+    return AspectRatio(
+      aspectRatio: _localController!.value.aspectRatio,
+      child: vp.VideoPlayer(_localController!),
+    );
+  }
+
+  Widget _buildYoutubeStreamVideo(ThemeData theme) {
+    if (_youtubeStreamController == null || !_youtubeStreamController!.value.isInitialized) {
+      return const CircularProgressIndicator(color: AppTheme.brand);
+    }
+    return AspectRatio(
+      aspectRatio: _youtubeStreamController!.value.aspectRatio,
+      child: vp.VideoPlayer(_youtubeStreamController!),
+    );
+  }
+
+  Widget _buildYouTubePlayer(ThemeData theme) {
+    if (_youtubeController == null) {
+      return const Text('YouTube initialization failed', style: TextStyle(color: Colors.white24));
+    }
+    return YoutubePlayer(
+      controller: _youtubeController!,
+      showVideoProgressIndicator: true,
+      progressIndicatorColor: AppTheme.brand,
+    );
+  }
+
+  Widget _buildScrubber(ThemeData theme) {
+    Duration position = Duration.zero;
+    Duration duration = Duration.zero;
+
+    if (_isLocalVideo && _localController != null) {
+      position = _localController!.value.position;
+      duration = _localController!.value.duration;
+    } else if (_youtubeStreamController != null) {
+      position = _youtubeStreamController!.value.position;
+      duration = _youtubeStreamController!.value.duration;
+    } else if (_youtubeController != null) {
+      position = _youtubeController!.value.position;
+      duration = _youtubeController!.metadata.duration;
+    }
+
+    final progress = duration.inSeconds > 0 
+        ? (position.inSeconds / duration.inSeconds).clamp(0.0, 1.0)
+        : 0.0;
+
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(_formatDuration(position), style: const TextStyle(color: Colors.white38, fontSize: 11)),
+            Text(_formatDuration(duration), style: const TextStyle(color: Colors.white38, fontSize: 11)),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Stack(
+          children: [
+            Container(
+              height: 4,
+              decoration: BoxDecoration(color: AppTheme.darkShadow, borderRadius: BorderRadius.circular(2)),
+            ),
+            FractionallySizedBox(
+              widthFactor: progress,
+              child: Container(
+                height: 4,
+                decoration: BoxDecoration(
+                  gradient: AppTheme.accentGradient,
+                  borderRadius: BorderRadius.circular(2),
+                  boxShadow: [
+                    BoxShadow(color: AppTheme.brand.withValues(alpha: 0.4), blurRadius: 6),
+                  ],
+                ),
+              ),
+            ),
+          ],
         ),
       ],
-    );
-  }
-
-  Widget _buildVideoPlayerScrubber(ThemeData theme, vp.VideoPlayerController c) {
-    final cs = theme.colorScheme;
-    return ValueListenableBuilder<vp.VideoPlayerValue>(
-      valueListenable: c,
-      builder: (context, value, _) {
-        final d = value.duration.inMilliseconds <= 0 ? Duration.zero : value.duration;
-        final maxS = d.inSeconds > 0 ? d.inSeconds.toDouble() : 1.0;
-        final pos = value.position.inSeconds.toDouble().clamp(0.0, maxS);
-        return Column(
-          children: [
-            SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                activeTrackColor: cs.primary,
-                inactiveTrackColor: cs.outline.withValues(alpha: 0.45),
-                secondaryActiveTrackColor: cs.onSurface.withValues(alpha: 0.22),
-                thumbColor: cs.primary,
-                trackHeight: 3,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                overlayShape: SliderComponentShape.noOverlay,
-              ),
-              child: Slider(
-                value: pos,
-                max: maxS,
-                onChanged: (v) {
-                  c.seekTo(Duration(seconds: v.toInt()));
-                  _touchUi();
-                },
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    _formatDuration(value.position),
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: cs.onSurface.withValues(alpha: 0.9),
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                  Text(
-                    '-${_formatDuration(Duration(seconds: (maxS - pos).round().clamp(0, maxS.toInt())))}',
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: cs.onSurfaceVariant,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _buildYoutubeScrubber(ThemeData theme) {
-    final c = _youtubeController!;
-    final cs = theme.colorScheme;
-    return ValueListenableBuilder<YoutubePlayerValue>(
-      valueListenable: c,
-      builder: (context, value, _) {
-        if (!value.isReady) {
-          return Padding(
-            padding: const EdgeInsets.all(16),
-            child: Text(
-              'Loading stream…',
-              textAlign: TextAlign.center,
-              style: theme.textTheme.bodyMedium?.copyWith(color: cs.onSurfaceVariant),
-            ),
-          );
-        }
-        final total = value.metaData.duration;
-        final maxS = total.inSeconds > 0 ? total.inSeconds.toDouble() : 1.0;
-        final pos = value.position.inSeconds.toDouble().clamp(0.0, maxS);
-        return Column(
-          children: [
-            SliderTheme(
-              data: SliderTheme.of(context).copyWith(
-                activeTrackColor: cs.primary,
-                inactiveTrackColor: cs.outline.withValues(alpha: 0.45),
-                thumbColor: cs.primary,
-                trackHeight: 3,
-                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                overlayShape: SliderComponentShape.noOverlay,
-              ),
-              child: Slider(
-                value: pos,
-                max: maxS,
-                onChanged: (v) {
-                  c.seekTo(Duration(seconds: v.toInt()));
-                  _touchUi();
-                },
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    _formatDuration(value.position),
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: cs.onSurface.withValues(alpha: 0.9),
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                  Text(
-                    '-${_formatDuration(Duration(seconds: (maxS - pos).round().clamp(0, maxS.toInt())))}',
-                    style: theme.textTheme.labelLarge?.copyWith(
-                      color: cs.onSurfaceVariant,
-                      fontFeatures: const [FontFeature.tabularFigures()],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
     );
   }
 
