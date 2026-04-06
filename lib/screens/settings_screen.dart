@@ -1,14 +1,9 @@
-import 'package:flutter/foundation.dart' show defaultTargetPlatform, TargetPlatform;
 import 'package:flutter/material.dart';
-import 'package:flutter/cupertino.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
-import '../legal/app_legal.dart';
-import '../widgets/glass_container.dart';
-import '../widgets/app_shell_background.dart';
-import '../providers/theme_provider.dart';
+import '../theme/app_theme.dart';
+import '../widgets/neumorphic_widgets.dart';
 import '../providers/home_provider.dart';
 import '../services/history_service.dart';
 
@@ -20,7 +15,7 @@ class SettingsScreen extends StatefulWidget {
 }
 
 class _SettingsScreenState extends State<SettingsScreen> {
-  String _appVersion = '…';
+  String _appVersion = '1.0.0';
 
   @override
   void initState() {
@@ -33,208 +28,123 @@ class _SettingsScreenState extends State<SettingsScreen> {
       final packageInfo = await PackageInfo.fromPlatform();
       if (mounted) {
         setState(() {
-          _appVersion = '${packageInfo.version} (${packageInfo.buildNumber})';
+          _appVersion = packageInfo.version;
         });
       }
-    } catch (_) {
-      if (mounted) setState(() => _appVersion = '1.0.0');
-    }
+    } catch (_) {}
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final horizontalPadding = MediaQuery.sizeOf(context).width > 600 ? 32.0 : 20.0;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: AppShellBackground(
+      backgroundColor: AppTheme.background,
+      body: SafeArea(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
-            SliverAppBar.large(
-              floating: false,
-              pinned: true,
-              backgroundColor: theme.scaffoldBackgroundColor.withValues(alpha: 0.65),
-              surfaceTintColor: Colors.transparent,
-              title: Text('Settings', style: theme.textTheme.titleLarge),
-              flexibleSpace: FlexibleSpaceBar(
-                background: SafeArea(
-                  child: Padding(
-                    padding: const EdgeInsets.fromLTRB(24, 56, 24, 0),
-                    child: Align(
-                      alignment: Alignment.bottomLeft,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'PROPLAYER',
-                            style: theme.textTheme.labelSmall?.copyWith(
-                              color: theme.colorScheme.primary,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 2,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Settings',
-                            style: theme.textTheme.headlineMedium?.copyWith(
-                              height: 1.05,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
+            // —— HEADER ———————————————————————————————————————————————
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: EdgeInsets.fromLTRB(horizontalPadding, 40, horizontalPadding, 20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'PREFERENCES',
+                      style: theme.textTheme.labelSmall?.copyWith(
+                        color: AppTheme.brand,
+                        fontWeight: FontWeight.w900,
+                        letterSpacing: 4,
                       ),
                     ),
-                  ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Settings',
+                      style: theme.textTheme.displaySmall?.copyWith(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w800,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
+
+            // —— SECTIONS —————————————————————————————————————————————
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 32),
+              padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
               sliver: SliverList(
                 delegate: SliverChildListDelegate([
-                  Text('Appearance', style: theme.textTheme.titleMedium),
-                  const SizedBox(height: 10),
-                  Consumer<ThemeProvider>(
-                    builder: (context, themeProvider, _) {
-                      return GlassContainer(
-                        padding: const EdgeInsets.all(18),
-                        child: Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(16),
-                                color: theme.colorScheme.secondary.withValues(alpha: 0.18),
-                              ),
-                              child: Icon(
-                                themeProvider.isDarkMode
-                                    ? CupertinoIcons.moon_stars_fill
-                                    : CupertinoIcons.sun_max_fill,
-                                color: theme.colorScheme.secondary,
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    'Dark appearance',
-                                    style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w700),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    themeProvider.isDarkMode ? 'OLED-friendly ink & coral' : 'Warm paper & daylight',
-                                    style: theme.textTheme.bodySmall,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            Switch(
-                              value: themeProvider.isDarkMode,
-                              onChanged: (_) => themeProvider.toggleTheme(),
-                              thumbColor: WidgetStateProperty.resolveWith(
-                                (s) => s.contains(WidgetState.selected)
-                                    ? theme.colorScheme.onPrimary
-                                    : null,
-                              ),
-                              trackColor: WidgetStateProperty.resolveWith(
-                                (s) => s.contains(WidgetState.selected)
-                                    ? theme.colorScheme.primary
-                                    : null,
-                              ),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                  ),
-                  const SizedBox(height: 28),
-                  Text('App', style: theme.textTheme.titleMedium),
-                  const SizedBox(height: 10),
-                  GlassContainer(
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                  const SizedBox(height: 12),
+                  _buildSectionHeader('Account & Data'),
+                  NeumorphicContainer(
+                    padding: const EdgeInsets.all(8),
+                    borderRadius: 24,
+                    depth: 8,
                     child: Column(
                       children: [
-                        _InfoRow(icon: CupertinoIcons.info_circle, label: 'Version', value: _appVersion),
-                        Divider(height: 1, color: theme.dividerTheme.color),
-                        _InfoRow(icon: CupertinoIcons.device_phone_portrait, label: 'Platform', value: 'Mobile'),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  Text('Data', style: theme.textTheme.titleMedium),
-                  const SizedBox(height: 10),
-                  GlassContainer(
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
-                    child: Column(
-                      children: [
-                        _ActionRow(
-                          icon: CupertinoIcons.trash_circle,
-                          title: 'Clear cache',
-                          subtitle: 'Free temporary storage',
-                          onTap: _showClearCacheDialog,
-                        ),
-                        Divider(height: 1, color: theme.dividerTheme.color),
-                        _ActionRow(
-                          icon: CupertinoIcons.clock_fill,
-                          title: 'Clear history',
-                          subtitle: 'Recently played list',
+                        _SettingsTile(
+                          icon: Icons.history_rounded,
+                          title: 'Clear History',
                           onTap: _showClearHistoryDialog,
                         ),
+                        _SettingsTile(
+                          icon: Icons.delete_sweep_rounded,
+                          title: 'Clear Cache',
+                          onTap: () => ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Cache cleared'))),
+                        ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 28),
-                  Text('Support', style: theme.textTheme.titleMedium),
-                  const SizedBox(height: 10),
-                  GlassContainer(
-                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+                  
+                  const SizedBox(height: 32),
+                  _buildSectionHeader('Support'),
+                  NeumorphicContainer(
+                    padding: const EdgeInsets.all(8),
+                    borderRadius: 24,
+                    depth: 8,
                     child: Column(
                       children: [
-                        _ActionRow(
-                          icon: CupertinoIcons.heart_fill,
-                          title: 'Rate ProPlayer',
-                          subtitle: 'On the store',
-                          onTap: _openStoreListing,
+                        _SettingsTile(
+                          icon: Icons.star_outline_rounded,
+                          title: 'Rate App',
+                          onTap: () {},
                         ),
-                        Divider(height: 1, color: theme.dividerTheme.color),
-                        _ActionRow(
-                          icon: CupertinoIcons.share_up,
-                          title: 'Share',
-                          subtitle: 'Invite a friend',
-                          onTap: _shareApp,
+                        _SettingsTile(
+                          icon: Icons.share_rounded,
+                          title: 'Invite Friends',
+                          // ignore: deprecated_member_use
+                          onTap: () => Share.share('Check out ProPlayer!'),
                         ),
-                        Divider(height: 1, color: theme.dividerTheme.color),
-                        _ActionRow(
-                          icon: CupertinoIcons.doc_text_fill,
-                          title: 'Privacy',
-                          onTap: () => _showLegal(AppLegal.privacyTitle, AppLegal.privacyBody),
-                        ),
-                        Divider(height: 1, color: theme.dividerTheme.color),
-                        _ActionRow(
-                          icon: CupertinoIcons.doc_plaintext,
-                          title: 'Terms',
-                          onTap: () => _showLegal(AppLegal.termsTitle, AppLegal.termsBody),
+                        _SettingsTile(
+                          icon: Icons.privacy_tip_outlined,
+                          title: 'Privacy Policy',
+                          onTap: () {},
                         ),
                       ],
                     ),
                   ),
+
                   const SizedBox(height: 40),
                   Center(
                     child: Column(
                       children: [
-                        Text('ProPlayer', style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800)),
-                        const SizedBox(height: 6),
                         Text(
-                          'Crafted for listening sessions.',
-                          style: theme.textTheme.bodySmall,
+                          'ProPlayer v$_appVersion',
+                          style: const TextStyle(color: Colors.white24, fontSize: 13, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 4),
+                        const Text(
+                          'Made with ❤️ for Gospel Music',
+                          style: TextStyle(color: Colors.white10, fontSize: 11),
                         ),
                       ],
                     ),
                   ),
+                  const SizedBox(height: 120),
                 ]),
               ),
             ),
@@ -244,126 +154,35 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
-  void _showClearCacheDialog() {
-    final theme = Theme.of(context);
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('Clear cache', style: theme.textTheme.titleLarge),
-        content: Text(
-          'Remove cached thumbnails and temp data?',
-          style: theme.textTheme.bodyMedium,
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          FilledButton(
-            onPressed: () {
-              Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Cache cleared')),
-              );
-            },
-            child: const Text('Clear'),
-          ),
-        ],
+  Widget _buildSectionHeader(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8, bottom: 12),
+      child: Text(
+        title,
+        style: const TextStyle(color: Colors.white38, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 1.2),
       ),
     );
   }
 
   void _showClearHistoryDialog() {
-    final theme = Theme.of(context);
-    showDialog<void>(
+    showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text('Clear history', style: theme.textTheme.titleLarge),
-        content: Text(
-          'Remove all recently played items?',
-          style: theme.textTheme.bodyMedium,
-        ),
+        backgroundColor: AppTheme.background,
+        title: const Text('Clear History'),
+        content: const Text('Are you sure you want to clear your recently played history?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
-          FilledButton(
+          TextButton(
             onPressed: () async {
               Navigator.pop(ctx);
               await HistoryService().clearAll();
-              if (!mounted) return;
-              await context.read<HomeProvider>().loadHomeData();
-              if (!mounted) return;
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('History cleared')),
-              );
+              if (mounted) {
+                context.read<HomeProvider>().loadHomeData();
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('History cleared')));
+              }
             },
-            child: const Text('Clear'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Future<void> _openStoreListing() async {
-    final uri = defaultTargetPlatform == TargetPlatform.iOS
-        ? Uri.parse('https://apps.apple.com/search?term=ProPlayer')
-        : Uri.parse('https://play.google.com/store/apps/details?id=com.example.proplayer');
-    final ok = await canLaunchUrl(uri);
-    if (!mounted) return;
-    if (ok) {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Could not open the store')),
-      );
-    }
-  }
-
-  Future<void> _shareApp() async {
-    await SharePlus.instance.share(
-      ShareParams(
-        text: 'Check out ProPlayer — local library and YouTube in one place.',
-        subject: 'ProPlayer',
-      ),
-    );
-  }
-
-  void _showLegal(String title, String body) {
-    final theme = Theme.of(context);
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text(title, style: theme.textTheme.titleLarge),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: SingleChildScrollView(
-            child: Text(body.trim(), style: theme.textTheme.bodyMedium?.copyWith(height: 1.45)),
-          ),
-        ),
-        actions: [
-          TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Close')),
-        ],
-      ),
-    );
-  }
-}
-
-class _InfoRow extends StatelessWidget {
-  const _InfoRow({required this.icon, required this.label, required this.value});
-
-  final IconData icon;
-  final String label;
-  final String value;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 14),
-      child: Row(
-        children: [
-          Icon(icon, color: theme.colorScheme.primary, size: 22),
-          const SizedBox(width: 12),
-          Expanded(child: Text(label, style: theme.textTheme.bodyLarge)),
-          Text(
-            value,
-            style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
+            child: const Text('Clear', style: TextStyle(color: Colors.redAccent)),
           ),
         ],
       ),
@@ -371,51 +190,26 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-class _ActionRow extends StatelessWidget {
-  const _ActionRow({
-    required this.icon,
-    required this.title,
-    this.subtitle,
-    required this.onTap,
-  });
-
+class _SettingsTile extends StatelessWidget {
+  const _SettingsTile({required this.icon, required this.title, required this.onTap});
   final IconData icon;
   final String title;
-  final String? subtitle;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    return InkWell(
+    return ListTile(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 14),
-        child: Row(
-          children: [
-            Icon(icon, color: theme.colorScheme.primary, size: 22),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(title, style: theme.textTheme.titleSmall?.copyWith(fontWeight: FontWeight.w600)),
-                  if (subtitle != null) ...[
-                    const SizedBox(height: 2),
-                    Text(subtitle!, style: theme.textTheme.bodySmall),
-                  ],
-                ],
-              ),
-            ),
-            Icon(
-              CupertinoIcons.chevron_forward,
-              size: 18,
-              color: theme.colorScheme.onSurface.withValues(alpha: 0.35),
-            ),
-          ],
+      leading: Container(
+        padding: const EdgeInsets.all(8),
+        decoration: BoxDecoration(
+          color: AppTheme.darkShadow,
+          borderRadius: BorderRadius.circular(12),
         ),
+        child: Icon(icon, color: AppTheme.brand, size: 20),
       ),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
+      trailing: const Icon(Icons.chevron_right_rounded, color: Colors.white24),
     );
   }
 }
