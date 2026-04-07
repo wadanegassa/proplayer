@@ -1,10 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
-import '../widgets/neumorphic_widgets.dart';
 import '../widgets/media_card.dart';
 import '../providers/home_provider.dart';
 import 'video_player_screen.dart';
+import '../providers/audio_player_provider.dart';
+import '../widgets/beat_animation.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -13,71 +14,63 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+  late TabController _tabController;
+
   @override
   void initState() {
     super.initState();
+    _tabController = TabController(length: 4, vsync: this);
     WidgetsBinding.instance.addPostFrameCallback((_) {
       Provider.of<HomeProvider>(context, listen: false).loadHomeData();
     });
   }
 
   @override
+  void dispose() {
+    _tabController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isTablet = MediaQuery.sizeOf(context).width > 600;
-    final horizontalPadding = isTablet ? 32.0 : 20.0;
+    final horizontalPadding = 24.0;
 
     return Scaffold(
       body: Consumer<HomeProvider>(
         builder: (context, provider, child) {
           if (provider.isLoading) {
-            return const Center(child: CircularProgressIndicator(color: AppTheme.brand));
+            return const Center(child: CircularProgressIndicator());
           }
 
           return CustomScrollView(
             physics: const BouncingScrollPhysics(),
             slivers: [
-              // —— NEUMORPHIC HEADER ——————————————————————————————————————
+              // —— HEADER ————————————————————————————————————————————————
               SliverAppBar(
-                expandedHeight: 140,
+                expandedHeight: 120,
                 floating: false,
                 pinned: true,
-                backgroundColor: AppTheme.background,
+                backgroundColor: theme.scaffoldBackgroundColor,
                 elevation: 0,
                 flexibleSpace: FlexibleSpaceBar(
                   background: Padding(
                     padding: EdgeInsets.fromLTRB(horizontalPadding, 60, horizontalPadding, 20),
                     child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisAlignment: MainAxisAlignment.end,
-                            children: [
-                              Text(
-                                'PROPLAYER',
-                                style: theme.textTheme.labelSmall?.copyWith(
-                                  color: AppTheme.brand,
-                                  fontWeight: FontWeight.w900,
-                                  letterSpacing: 4,
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Discover',
-                                style: theme.textTheme.displaySmall?.copyWith(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ],
+                        Text(
+                          'Discover',
+                          style: theme.textTheme.displaySmall?.copyWith(
+                            fontSize: 36,
+                            fontWeight: FontWeight.w900,
                           ),
                         ),
-                        NeumorphicButton(
-                          size: 48,
+                        IconButton(
                           onPressed: () {},
-                          child: const Icon(Icons.search_rounded, color: Colors.white70),
+                          icon: const Icon(Icons.search_rounded, size: 28),
                         ),
                       ],
                     ),
@@ -85,16 +78,46 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
 
-              // —— TRENDING (EXPLORE) —————————————————————————————————————
+              // —— TAB BAR ———————————————————————————————————————————————
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: TabBar(
+                      controller: _tabController,
+                      isScrollable: true,
+                      dividerColor: Colors.transparent,
+                      indicatorColor: AppTheme.primary,
+                      indicatorWeight: 3,
+                      indicatorSize: TabBarIndicatorSize.label,
+                      labelPadding: const EdgeInsets.only(right: 24),
+                      labelColor: theme.colorScheme.onSurface,
+                      unselectedLabelColor: theme.colorScheme.onSurfaceVariant,
+                      labelStyle: theme.textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+                      unselectedLabelStyle: theme.textTheme.titleMedium,
+                      tabs: const [
+                        Tab(text: 'Overview'),
+                        Tab(text: 'Songs'),
+                        Tab(text: 'Albums'),
+                        Tab(text: 'Artists'),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+
+              // —— POPULAR THIS WEEK ——————————————————————————————————————
               if (provider.randomMix.isNotEmpty)
                 SliverToBoxAdapter(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _SectionHeader(title: 'Trending Now', padding: horizontalPadding),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 32),
+                      _SectionHeader(title: 'Popular This Week', padding: horizontalPadding),
+                      const SizedBox(height: 20),
                       SizedBox(
-                        height: 240,
+                        height: 280,
                         child: ListView.builder(
                           scrollDirection: Axis.horizontal,
                           padding: EdgeInsets.only(left: horizontalPadding),
@@ -121,12 +144,12 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
 
-              // —— RECENTLY PLAYED ————————————————————————————————————————
+              // —— TOP SONGS ——————————————————————————————————————————————
               if (provider.recentlyPlayed.isNotEmpty)
-                SliverPadding(
-                  padding: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 24),
-                  sliver: SliverToBoxAdapter(
-                    child: _SectionHeader(title: 'Recently Played', padding: 0),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 32, bottom: 16),
+                    child: _SectionHeader(title: 'Top Songs', padding: horizontalPadding),
                   ),
                 ),
               
@@ -137,10 +160,12 @@ class _HomeScreenState extends State<HomeScreen> {
                     delegate: SliverChildBuilderDelegate(
                       (context, index) {
                         final item = provider.recentlyPlayed[index];
-                        return NeumorphicListTile(
-                          title: item.title,
-                          subtitle: item.subtitle,
-                          isSelected: index == 0,
+                        final audioProvider = context.watch<AudioPlayerProvider>();
+                        final isPlaying = audioProvider.isPlaying && audioProvider.currentTrack?.id == item.id;
+                        
+                        return _SongTile(
+                          item: item,
+                          isPlaying: isPlaying,
                           onTap: () {
                             if (!item.isLocal) {
                               Navigator.push(
@@ -149,14 +174,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                   builder: (context) => VideoPlayerScreen(mediaItem: item),
                                 ),
                               );
+                            } else {
+                              audioProvider.playTrack(item, provider.recentlyPlayed);
                             }
                           },
-                          trailing: NeumorphicButton(
-                            size: 32,
-                            borderRadius: 8,
-                            onPressed: () {},
-                            child: const Icon(Icons.play_arrow_rounded, size: 18, color: Colors.white70),
-                          ),
                         );
                       },
                       childCount: provider.recentlyPlayed.length,
@@ -184,7 +205,86 @@ class _SectionHeader extends StatelessWidget {
       padding: EdgeInsets.symmetric(horizontal: padding),
       child: Text(
         title,
-        style: Theme.of(context).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+        style: Theme.of(context).textTheme.titleLarge?.copyWith(
+          fontWeight: FontWeight.w900,
+          fontSize: 22,
+        ),
+      ),
+    );
+  }
+}
+
+class _SongTile extends StatelessWidget {
+  const _SongTile({required this.item, required this.onTap, this.isPlaying = false});
+  final dynamic item;
+  final VoidCallback onTap;
+  final bool isPlaying;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Row(
+          children: [
+            // Thumbnail with play icon
+            BeatAnimation(
+              isPlaying: isPlaying,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: item.thumbnail != null
+                        ? Image.network(item.thumbnail!, width: 56, height: 56, fit: BoxFit.cover)
+                        : item.thumbnailBytes != null
+                            ? Image.memory(item.thumbnailBytes!, width: 56, height: 56, fit: BoxFit.cover)
+                            : Container(
+                                width: 56, 
+                                height: 56, 
+                                color: isPlaying ? AppTheme.primary.withValues(alpha: 0.1) : theme.colorScheme.surface,
+                                child: Icon(Icons.graphic_eq_rounded, color: isPlaying ? AppTheme.primary : Colors.grey),
+                              ),
+                  ),
+                  Icon(isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded, color: Colors.white, size: 24),
+                ],
+              ),
+            ),
+            const SizedBox(width: 16),
+            // Title and subtitle
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    item.title,
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: isPlaying ? AppTheme.primary : null,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${item.subtitle} • 12,098 Played',
+                    style: theme.textTheme.bodySmall?.copyWith(color: theme.colorScheme.onSurfaceVariant),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
+              ),
+            ),
+            IconButton(
+              onPressed: () {},
+              icon: const Icon(Icons.more_horiz_rounded),
+            ),
+          ],
+        ),
       ),
     );
   }
