@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
-import '../widgets/neumorphic_widgets.dart';
 import '../widgets/media_card.dart';
 import '../providers/browser_provider.dart';
 import 'video_player_screen.dart';
@@ -29,7 +28,7 @@ class _BrowserResultsScreenState extends State<BrowserResultsScreen> {
     final theme = Theme.of(context);
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -38,12 +37,11 @@ class _BrowserResultsScreenState extends State<BrowserResultsScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               child: Row(
                 children: [
-                  NeumorphicButton(
-                    size: 44,
+                  IconButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Icon(Icons.arrow_back_rounded, color: Colors.white70),
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -51,7 +49,7 @@ class _BrowserResultsScreenState extends State<BrowserResultsScreen> {
                         Text(
                           widget.category.toUpperCase(),
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color: AppTheme.brand,
+                            color: AppTheme.primary,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 2,
                           ),
@@ -60,15 +58,14 @@ class _BrowserResultsScreenState extends State<BrowserResultsScreen> {
                         ),
                         const Text(
                           'Search Results',
-                          style: TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
+                          style: TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
                         ),
                       ],
                     ),
                   ),
-                  NeumorphicButton(
-                    size: 44,
+                  IconButton(
                     onPressed: () => Provider.of<BrowserProvider>(context, listen: false).fetchCategory(widget.category),
-                    child: const Icon(Icons.refresh_rounded, color: Colors.white70),
+                    icon: const Icon(Icons.refresh_rounded),
                   ),
                 ],
               ),
@@ -79,22 +76,22 @@ class _BrowserResultsScreenState extends State<BrowserResultsScreen> {
               child: Consumer<BrowserProvider>(
                 builder: (context, provider, child) {
                   if (provider.state == BrowserState.loading) {
-                    return const Center(child: CircularProgressIndicator(color: AppTheme.brand));
+                    return const Center(child: CircularProgressIndicator());
                   }
 
                   if (provider.videos.isEmpty) {
-                    return const Center(
-                      child: Text('No results found', style: TextStyle(color: Colors.white24)),
+                    return Center(
+                      child: Text('No results found', style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.3))),
                     );
                   }
 
                   return GridView.builder(
-                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 120),
+                    padding: const EdgeInsets.fromLTRB(20, 8, 20, 150),
                     gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       crossAxisSpacing: 16,
                       mainAxisSpacing: 24,
-                      childAspectRatio: 0.85,
+                      childAspectRatio: 0.8,
                     ),
                     itemCount: provider.videos.length,
                     itemBuilder: (context, index) {
