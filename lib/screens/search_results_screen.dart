@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
-import '../widgets/neumorphic_widgets.dart';
 import '../widgets/media_card.dart';
 import '../providers/browser_provider.dart';
 import '../providers/library_provider.dart';
@@ -32,7 +31,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
     final q = widget.query.toLowerCase();
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           children: [
@@ -41,12 +40,11 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
               child: Row(
                 children: [
-                  NeumorphicButton(
-                    size: 44,
+                  IconButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Icon(Icons.arrow_back_rounded, color: Colors.white70),
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded),
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -54,14 +52,14 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                         Text(
                           'SEARCHING FOR',
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color: AppTheme.brand,
+                            color: AppTheme.primary,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 2,
                           ),
                         ),
                         Text(
                           '"${widget.query}"',
-                          style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 20),
+                          style: const TextStyle(fontWeight: FontWeight.w900, fontSize: 20),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -98,7 +96,7 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                               crossAxisCount: 2,
                               crossAxisSpacing: 16,
                               mainAxisSpacing: 24,
-                              childAspectRatio: 0.85,
+                              childAspectRatio: 0.8,
                             ),
                             delegate: SliverChildBuilderDelegate(
                               (context, index) {
@@ -123,17 +121,17 @@ class _SearchResultsScreenState extends State<SearchResultsScreen> {
                       ),
 
                       if (browser.state == BrowserState.loading)
-                        const SliverFillRemaining(child: Center(child: CircularProgressIndicator(color: AppTheme.brand))),
+                        const SliverFillRemaining(child: Center(child: CircularProgressIndicator())),
 
                       if (browser.videos.isNotEmpty)
                         SliverPadding(
-                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 120),
+                          padding: const EdgeInsets.fromLTRB(20, 0, 20, 150),
                           sliver: SliverGrid(
                             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                               crossAxisCount: 2,
                               crossAxisSpacing: 16,
                               mainAxisSpacing: 24,
-                              childAspectRatio: 0.85,
+                              childAspectRatio: 0.8,
                             ),
                             delegate: SliverChildBuilderDelegate(
                               (context, index) {
@@ -169,8 +167,8 @@ class _SectionHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Text(
-      text,
-      style: const TextStyle(color: Colors.white38, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 1.2),
+      text.toUpperCase(),
+      style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 2),
     );
   }
 }
