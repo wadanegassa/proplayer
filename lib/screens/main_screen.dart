@@ -6,14 +6,16 @@ import '../providers/main_nav_provider.dart';
 import 'home_screen.dart';
 import 'browse_screen.dart';
 import 'library_screen.dart';
+import 'settings_screen.dart';
 
 class MainScreen extends StatelessWidget {
   const MainScreen({super.key});
 
   static const List<Widget> _screens = [
     HomeScreen(),
-    BrowseScreen(),
     LibraryScreen(),
+    BrowseScreen(),
+    SettingsScreen(),
   ];
 
   @override
