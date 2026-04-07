@@ -1,9 +1,11 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:audio_video_progress_bar/audio_video_progress_bar.dart';
 import '../theme/app_theme.dart';
-import '../widgets/neumorphic_widgets.dart';
 import '../models/media_item.dart';
 import '../providers/audio_player_provider.dart';
+import '../widgets/beat_animation.dart';
 
 class LocalPlayerScreen extends StatelessWidget {
   final MediaItem mediaItem;
@@ -32,9 +34,40 @@ class LocalPlayerScreen extends StatelessWidget {
     }
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
-      body: SafeArea(
-        child: Padding(
+      backgroundColor: theme.scaffoldBackgroundColor,
+      body: Stack(
+        children: [
+          // —— BACKGROUND ARTWORK ——————————————————————————————————————
+          Positioned.fill(
+            child: currentSong.thumbnailBytes != null
+              ? Image.memory(currentSong.thumbnailBytes!, fit: BoxFit.cover)
+              : currentSong.thumbnail != null
+                ? Image.network(currentSong.thumbnail!, fit: BoxFit.cover)
+                : Container(color: theme.colorScheme.surface),
+          ),
+          // —— BLUR & GRADIENT OVERLAY —————————————————————————————————
+          Positioned.fill(
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 60, sigmaY: 60),
+              child: Container(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.black.withValues(alpha: 0.4),
+                      theme.scaffoldBackgroundColor.withValues(alpha: 0.7),
+                      theme.scaffoldBackgroundColor.withValues(alpha: 0.95),
+                    ],
+                    stops: const [0.0, 0.4, 1.0],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // —— FOREGROUND UI ———————————————————————————————————————————
+          SafeArea(
+            child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
           child: Column(
             children: [
@@ -42,203 +75,184 @@ class LocalPlayerScreen extends StatelessWidget {
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  NeumorphicButton(
-                    size: 44,
+                  IconButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Icon(Icons.arrow_back_rounded, color: Colors.white70),
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded),
                   ),
                   Text(
-                    'PLAYING NOW',
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      color: Colors.white38,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 2,
+                    'Now Playing',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
                     ),
                   ),
-                  NeumorphicButton(
-                    size: 44,
+                  IconButton(
                     onPressed: () {},
-                    child: const Icon(Icons.menu_rounded, color: Colors.white70),
+                    icon: const Icon(Icons.more_horiz_rounded),
                   ),
                 ],
               ),
 
-              const Spacer(flex: 2),
+              const SizedBox(height: 40),
 
               // —— ARTWORK ——————————————————————————————————————————————
-              NeumorphicContainer(
-                width: size.width * 0.72,
-                height: size.width * 0.72,
-                shape: BoxShape.circle,
-                padding: const EdgeInsets.all(12),
-                depth: 20,
-                child: Container(
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    image: currentSong.thumbnailBytes != null 
-                      ? DecorationImage(image: MemoryImage(currentSong.thumbnailBytes!), fit: BoxFit.cover)
+              Center(
+                child: BeatAnimation(
+                  isPlaying: audioProvider.isPlaying,
+                  child: Container(
+                    width: size.width * 0.75,
+                    height: size.width * 0.75,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(40),
+                      boxShadow: [
+                        BoxShadow(
+                          color: AppTheme.primary.withValues(alpha: audioProvider.isPlaying ? 0.3 : 0.05),
+                          blurRadius: audioProvider.isPlaying ? 40 : 20,
+                          spreadRadius: audioProvider.isPlaying ? 10 : 0,
+                          offset: const Offset(0, 15),
+                        ),
+                      ],
+                      image: currentSong.thumbnailBytes != null 
+                        ? DecorationImage(image: MemoryImage(currentSong.thumbnailBytes!), fit: BoxFit.cover)
+                        : currentSong.thumbnail != null
+                          ? DecorationImage(image: NetworkImage(currentSong.thumbnail!), fit: BoxFit.cover)
+                          : null,
+                      color: theme.colorScheme.surface,
+                    ),
+                    child: (currentSong.thumbnailBytes == null && currentSong.thumbnail == null)
+                      ? Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(Icons.graphic_eq_rounded, color: AppTheme.primary.withValues(alpha: 0.8), size: 120),
+                          ],
+                        )
                       : null,
-                    color: currentSong.thumbnailBytes == null ? AppTheme.darkShadow : null,
                   ),
-                  child: currentSong.thumbnailBytes == null 
-                    ? const Icon(Icons.music_note_rounded, color: Colors.white10, size: 80)
-                    : null,
                 ),
               ),
 
-              const Spacer(flex: 2),
+              const SizedBox(height: 50),
 
               // —— METADATA —————————————————————————————————————————————
               Text(
                 currentSong.title,
                 textAlign: TextAlign.center,
-                style: theme.textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.w800,
-                  fontSize: 28,
+                style: theme.textTheme.displaySmall?.copyWith(
+                  fontWeight: FontWeight.w900,
+                  fontSize: 32,
                 ),
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: 12),
               Text(
                 currentSong.subtitle,
                 textAlign: TextAlign.center,
                 style: theme.textTheme.titleMedium?.copyWith(
-                  color: Colors.white38,
+                  color: theme.colorScheme.onSurfaceVariant,
                   fontWeight: FontWeight.w500,
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
 
-              const Spacer(flex: 2),
+              const Spacer(),
 
-              // —— SLIDER ———————————————————————————————————————————————
+              // —— WAVEFORM PROGRESS BAR —————————————————————————————————
               StreamBuilder<Duration>(
                 stream: audioProvider.audioPlayer.positionStream,
                 builder: (context, snapshot) {
                   final position = snapshot.data ?? Duration.zero;
                   final duration = audioProvider.audioPlayer.duration ?? Duration.zero;
-                  final progress = duration.inSeconds > 0 
-                      ? (position.inSeconds / duration.inSeconds).clamp(0.0, 1.0)
-                      : 0.0;
 
-                  return Column(
-                    children: [
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text(
-                              _formatDuration(position),
-                              style: const TextStyle(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.bold),
-                            ),
-                            Text(
-                              _formatDuration(duration),
-                              style: const TextStyle(color: Colors.white38, fontSize: 12, fontWeight: FontWeight.bold),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      // Custom Neumorphic Slider
-                      Stack(
-                        children: [
-                          Container(
-                            height: 6,
-                            decoration: BoxDecoration(
-                              color: AppTheme.darkShadow,
-                              borderRadius: BorderRadius.circular(3),
-                            ),
-                          ),
-                          FractionallySizedBox(
-                            widthFactor: progress,
-                            child: Container(
-                              height: 6,
-                              decoration: BoxDecoration(
-                                gradient: AppTheme.accentGradient,
-                                borderRadius: BorderRadius.circular(3),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: AppTheme.brand.withValues(alpha: 0.5),
-                                    blurRadius: 10,
-                                    spreadRadius: 1,
-                                  )
-                                ],
-                              ),
-                            ),
-                          ),
-                          // Thumb (invisible slider to handle input)
-                          Positioned.fill(
-                            child: SliderTheme(
-                              data: SliderTheme.of(context).copyWith(
-                                trackHeight: 6,
-                                activeTrackColor: Colors.transparent,
-                                inactiveTrackColor: Colors.transparent,
-                                thumbColor: AppTheme.brand,
-                                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 6),
-                                overlayShape: SliderComponentShape.noOverlay,
-                              ),
-                              child: Slider(
-                                value: progress,
-                                onChanged: (v) {
-                                  final newPos = Duration(seconds: (v * duration.inSeconds).toInt());
-                                  audioProvider.audioPlayer.seek(newPos);
-                                },
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                  return ProgressBar(
+                    progress: position,
+                    total: duration,
+                    onSeek: (duration) {
+                      audioProvider.audioPlayer.seek(duration);
+                    },
+                    barHeight: 5,
+                    baseBarColor: theme.colorScheme.onSurface.withValues(alpha: 0.1),
+                    progressBarColor: AppTheme.primary,
+                    thumbColor: AppTheme.primary,
+                    thumbRadius: 6,
+                    timeLabelTextStyle: theme.textTheme.bodySmall?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.onSurface,
+                    ),
                   );
                 }
               ),
 
-              const Spacer(flex: 2),
+              const SizedBox(height: 40),
 
               // —— CONTROLS —————————————————————————————————————————————
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
-                  NeumorphicButton(
-                    size: 64,
+                   IconButton(
                     onPressed: () => audioProvider.playPrevious(),
-                    child: const Icon(Icons.fast_rewind_rounded, size: 28, color: Colors.white70),
+                    icon: const Icon(Icons.skip_previous_rounded, size: 40),
                   ),
-                  NeumorphicButton(
-                    size: 80,
-                    isAccent: true,
-                    onPressed: () {
+                  GestureDetector(
+                    onTap: () {
                       if (audioProvider.isPlaying) {
                         audioProvider.pause();
                       } else {
                         audioProvider.play();
                       }
                     },
-                    child: Icon(
-                      audioProvider.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
-                      size: 40,
-                      color: Colors.white,
+                    child: Container(
+                      width: 80,
+                      height: 80,
+                      decoration: BoxDecoration(
+                        color: AppTheme.primary,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.primary.withValues(alpha: 0.3),
+                            blurRadius: 20,
+                            offset: const Offset(0, 10),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        audioProvider.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                        size: 48,
+                        color: Colors.black,
+                      ),
                     ),
                   ),
-                  NeumorphicButton(
-                    size: 64,
+                  IconButton(
                     onPressed: () => audioProvider.playNext(),
-                    child: const Icon(Icons.fast_forward_rounded, size: 28, color: Colors.white70),
+                    icon: const Icon(Icons.skip_next_rounded, size: 40),
                   ),
                 ],
               ),
 
-              const Spacer(flex: 1),
+              const Spacer(),
+              
+              // —— BOTTOM SONGS INDICATOR ————————————————————————————————
+              Column(
+                children: [
+                  const Icon(Icons.keyboard_arrow_up_rounded, color: Colors.white24),
+                  Text(
+                    'QUEUE',
+                    style: theme.textTheme.labelLarge?.copyWith(
+                      letterSpacing: 2,
+                      fontWeight: FontWeight.w900,
+                      fontSize: 14,
+                      color: Colors.white24,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 10),
             ],
           ),
         ),
       ),
+      ]
+     ),
     );
-  }
-
-  String _formatDuration(Duration duration) {
-    String twoDigits(int n) => n.toString().padLeft(2, '0');
-    final minutes = twoDigits(duration.inMinutes.remainder(60));
-    final seconds = twoDigits(duration.inSeconds.remainder(60));
-    return '$minutes:$seconds';
   }
 }
