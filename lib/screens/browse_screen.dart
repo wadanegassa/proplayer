@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
-import '../widgets/neumorphic_widgets.dart';
 import '../widgets/media_card.dart';
 import '../providers/home_provider.dart';
 import '../providers/browser_provider.dart';
@@ -27,11 +26,10 @@ class _BrowseScreenState extends State<BrowseScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isTablet = MediaQuery.sizeOf(context).width > 600;
-    final horizontalPadding = isTablet ? 32.0 : 20.0;
+    final horizontalPadding = MediaQuery.sizeOf(context).width > 600 ? 32.0 : 20.0;
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
@@ -46,17 +44,16 @@ class _BrowseScreenState extends State<BrowseScreen> {
                     Text(
                       'BROWSE',
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: AppTheme.brand,
+                        color: AppTheme.primary,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 4,
                       ),
                     ),
-                    const SizedBox(height: 4),
                     Text(
                       'Categories',
                       style: theme.textTheme.displaySmall?.copyWith(
                         fontSize: 32,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                   ],
@@ -68,10 +65,19 @@ class _BrowseScreenState extends State<BrowseScreen> {
             SliverToBoxAdapter(
               child: Padding(
                 padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-                child: NeumorphicContainer(
+                child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  borderRadius: 20,
-                  depth: -6, // Recessed for input
+                  decoration: BoxDecoration(
+                    color: theme.colorScheme.surface,
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: theme.brightness == Brightness.dark ? 0.2 : 0.05),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
                   child: TextField(
                     controller: _searchController,
                     onSubmitted: (query) {
@@ -84,14 +90,10 @@ class _BrowseScreenState extends State<BrowseScreen> {
                       );
                       Provider.of<BrowserProvider>(context, listen: false).search(query);
                     },
-                    style: const TextStyle(color: Colors.white, fontSize: 16),
                     decoration: const InputDecoration(
                       hintText: 'Search gospel, worship, hymns…',
-                      hintStyle: TextStyle(color: Colors.white24),
-                      prefixIcon: Icon(Icons.search_rounded, color: Colors.white54),
+                      prefixIcon: Icon(Icons.search_rounded),
                       border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
                     ),
                   ),
                 ),
@@ -117,7 +119,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
                   _CategoryItem(
                     title: 'Oromo',
                     icon: Icons.library_music_rounded,
-                    onTap: () => _navigateToCategory(context, 'Afaan Oromo Gospel'),
+                    onTap: () => _navigateToCategory(context, 'Oromo Gospel'),
                   ),
                   _CategoryItem(
                     title: 'English',
@@ -139,7 +141,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
                 padding: EdgeInsets.fromLTRB(horizontalPadding, 40, horizontalPadding, 20),
                 child: Text(
                   'Top Picks',
-                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w800),
+                  style: theme.textTheme.titleLarge?.copyWith(fontWeight: FontWeight.w900),
                 ),
               ),
             ),
@@ -148,7 +150,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
               child: Consumer<HomeProvider>(
                 builder: (context, homeProvider, _) {
                   if (homeProvider.randomMix.isEmpty) {
-                    return const Center(child: CircularProgressIndicator(color: AppTheme.brand));
+                    return const Center(child: CircularProgressIndicator());
                   }
                   return SizedBox(
                     height: 240,
@@ -179,7 +181,7 @@ class _BrowseScreenState extends State<BrowseScreen> {
               ),
             ),
 
-            const SliverToBoxAdapter(child: SizedBox(height: 120)),
+            const SliverToBoxAdapter(child: SizedBox(height: 150)),
           ],
         ),
       ),
@@ -204,16 +206,26 @@ class _CategoryItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
     return GestureDetector(
       onTap: onTap,
-      child: NeumorphicContainer(
+      child: Container(
         padding: const EdgeInsets.all(16),
-        borderRadius: 24,
-        depth: 8,
+        decoration: BoxDecoration(
+          color: theme.colorScheme.surface,
+          borderRadius: BorderRadius.circular(24),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: theme.brightness == Brightness.dark ? 0.2 : 0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, color: AppTheme.brand, size: 32),
+            Icon(icon, color: AppTheme.primary, size: 32),
             const SizedBox(height: 8),
             Text(
               title,
