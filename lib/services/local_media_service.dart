@@ -70,6 +70,7 @@ class LocalMediaService {
           try {
             final file = await asset.file;
             if (file != null) {
+              final thumbnail = await asset.thumbnailDataWithSize(const ThumbnailSize(200, 200));
               final item = MediaItem(
                 id: file.path,
                 title: asset.title ??
@@ -78,7 +79,7 @@ class LocalMediaService {
                 duration: _formatDuration(asset.duration),
                 isVideo: false,
                 isLocal: true,
-                thumbnailBytes: null,
+                thumbnailBytes: thumbnail,
               );
               albumItems.add(item);
               flat.add(item);
