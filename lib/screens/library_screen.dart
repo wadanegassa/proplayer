@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../theme/app_theme.dart';
-import '../widgets/neumorphic_widgets.dart';
 import '../widgets/media_card.dart';
 import '../providers/library_provider.dart';
 import 'library_album_screen.dart';
@@ -45,7 +44,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
     final horizontalPadding = MediaQuery.sizeOf(context).width > 600 ? 32.0 : 20.0;
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -62,29 +61,27 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
                         Text(
                           'YOUR',
                           style: theme.textTheme.labelSmall?.copyWith(
-                            color: AppTheme.brand,
+                            color: AppTheme.primary,
                             fontWeight: FontWeight.w900,
                             letterSpacing: 4,
                           ),
                         ),
-                        const SizedBox(height: 4),
                         Text(
                           'Library',
                           style: theme.textTheme.displaySmall?.copyWith(
                             fontSize: 32,
-                            fontWeight: FontWeight.w800,
+                            fontWeight: FontWeight.w900,
                           ),
                         ),
                       ],
                     ),
                   ),
                   Consumer<LibraryProvider>(
-                    builder: (context, provider, _) => NeumorphicButton(
-                      size: 48,
+                    builder: (context, provider, _) => IconButton(
                       onPressed: provider.isScanning ? null : () => provider.scanMedia(),
-                      child: provider.isScanning
-                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white70))
-                          : const Icon(Icons.refresh_rounded, color: Colors.white70),
+                      icon: provider.isScanning
+                          ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                          : const Icon(Icons.refresh_rounded),
                     ),
                   ),
                 ],
@@ -94,18 +91,25 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
             // —— SEARCH ———————————————————————————————————————————————
             Padding(
               padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-              child: NeumorphicContainer(
+              child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                borderRadius: 20,
-                depth: -6,
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.surface,
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: theme.brightness == Brightness.dark ? 0.3 : 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
                 child: TextField(
                   controller: _searchController,
                   onChanged: (v) => setState(() => _searchQuery = v.toLowerCase()),
-                  style: const TextStyle(color: Colors.white),
                   decoration: const InputDecoration(
                     hintText: 'Search your collection...',
-                    hintStyle: TextStyle(color: Colors.white24),
-                    prefixIcon: Icon(Icons.search_rounded, color: Colors.white54),
+                    prefixIcon: Icon(Icons.search_rounded),
                     border: InputBorder.none,
                   ),
                 ),
@@ -117,30 +121,18 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
             // —— TABS —————————————————————————————————————————————————
             Padding(
               padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-              child: NeumorphicContainer(
-                height: 54,
-                borderRadius: 20,
-                padding: const EdgeInsets.all(6),
-                depth: -4,
-                child: TabBar(
-                  controller: _tabController,
-                  indicator: BoxDecoration(
-                    color: AppTheme.brand,
-                    borderRadius: BorderRadius.circular(14),
-                    boxShadow: [
-                      BoxShadow(color: AppTheme.brand.withValues(alpha: 0.3), blurRadius: 8),
-                    ],
-                  ),
-                  dividerColor: Colors.transparent,
-                  indicatorSize: TabBarIndicatorSize.tab,
-                  labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                  unselectedLabelColor: Colors.white38,
-                  tabs: const [
-                    Tab(text: 'Audio'),
-                    Tab(text: 'Videos'),
-                    Tab(text: 'Folders'),
-                  ],
-                ),
+              child: TabBar(
+                controller: _tabController,
+                indicatorColor: AppTheme.primary,
+                labelColor: theme.colorScheme.onSurface,
+                unselectedLabelColor: theme.colorScheme.onSurface.withValues(alpha: 0.5),
+                labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                dividerColor: Colors.transparent,
+                tabs: const [
+                  Tab(text: 'Audio'),
+                  Tab(text: 'Videos'),
+                  Tab(text: 'Folders'),
+                ],
               ),
             ),
 
@@ -172,16 +164,16 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
     final filtered = items.where((i) => i.title.toLowerCase().contains(_searchQuery)).toList();
 
     if (filtered.isEmpty) {
-      return const Center(child: Text('No items found', style: TextStyle(color: Colors.white24)));
+      return Center(child: Text('No items found', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withValues(alpha: 0.3))));
     }
 
     return GridView.builder(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 150),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
         crossAxisSpacing: 16,
         mainAxisSpacing: 24,
-        childAspectRatio: 0.85,
+        childAspectRatio: 0.8,
       ),
       itemCount: filtered.length,
       itemBuilder: (context, index) {
@@ -204,20 +196,26 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
   }
 
   Widget _buildFoldersView(LibraryProvider provider) {
-    // Basic folder implementation using NeumorphicListTile
     final folders = [...provider.audioAlbums, ...provider.videoAlbums];
     final filtered = folders.where((f) => f.title.toLowerCase().contains(_searchQuery)).toList();
 
     return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(20, 16, 20, 120),
+      padding: const EdgeInsets.fromLTRB(20, 16, 20, 150),
       itemCount: filtered.length,
       itemBuilder: (context, index) {
         final folder = filtered[index];
-        return NeumorphicListTile(
-          title: folder.title,
-          subtitle: '${folder.items.length} items',
-          onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => LibraryAlbumScreen(album: folder, isVideoAlbum: folder.items.isNotEmpty && folder.items.first.isVideo))),
-          trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14, color: Colors.white24),
+        return Container(
+          margin: const EdgeInsets.only(bottom: 12),
+          decoration: BoxDecoration(
+            color: Theme.of(context).colorScheme.surface,
+            borderRadius: BorderRadius.circular(16),
+          ),
+          child: ListTile(
+            title: Text(folder.title, style: const TextStyle(fontWeight: FontWeight.bold)),
+            subtitle: Text('${folder.items.length} items'),
+            onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => LibraryAlbumScreen(album: folder, isVideoAlbum: folder.items.isNotEmpty && folder.items.first.isVideo))),
+            trailing: const Icon(Icons.arrow_forward_ios_rounded, size: 14),
+          ),
         );
       },
     );
