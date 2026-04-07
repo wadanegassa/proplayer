@@ -7,7 +7,7 @@ class MainNavProvider extends ChangeNotifier {
   int get currentIndex => _index;
 
   void setIndex(int index) {
-    if (index == _index || index < 0 || index > 2) return;
+    if (index == _index || index < 0 || index > 3) return;
     _index = index;
     notifyListeners();
   }
