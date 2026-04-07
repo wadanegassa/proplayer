@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import '../theme/app_theme.dart';
-import 'neumorphic_widgets.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   const CustomBottomNavBar({
@@ -12,64 +10,45 @@ class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
   final void Function(int index) onTap;
 
-  static const _items = <({IconData icon, String label})>[
-    (icon: Icons.home_rounded, label: 'Home'),
-    (icon: Icons.explore_rounded, label: 'Discover'),
-    (icon: Icons.library_music_rounded, label: 'Library'),
+  static const _items = [
+    Icons.music_note_rounded,
+    Icons.favorite_rounded,
+    Icons.cloud_download_rounded,
+    Icons.settings_rounded,
   ];
 
   @override
   Widget build(BuildContext context) {
-    final bottomPadding = MediaQuery.paddingOf(context).bottom;
+    final theme = Theme.of(context);
     
-    return Padding(
-      padding: EdgeInsets.fromLTRB(24, 8, 24, bottomPadding > 0 ? bottomPadding : 20),
-      child: NeumorphicContainer(
-        height: 72,
-        borderRadius: 30,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        depth: 12,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: List.generate(_items.length, (i) {
-            final item = _items[i];
-            final selected = currentIndex == i;
-            
-            return GestureDetector(
-              onTap: () => onTap(i),
-              behavior: HitTestBehavior.opaque,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(20),
-                  color: selected ? AppTheme.brand.withValues(alpha: 0.1) : Colors.transparent,
-                ),
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      item.icon,
-                      size: selected ? 26 : 24,
-                      color: selected ? AppTheme.brand : Colors.white24,
-                    ),
-                    if (selected) ...[
-                      const SizedBox(height: 4),
-                      Container(
-                        width: 4,
-                        height: 4,
-                        decoration: const BoxDecoration(
-                          color: AppTheme.brand,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            );
-          }),
-        ),
+    return Container(
+      margin: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: theme.colorScheme.surface,
+        borderRadius: BorderRadius.circular(32),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: theme.brightness == Brightness.dark ? 0.3 : 0.05),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: List.generate(_items.length, (i) {
+          final isSelected = currentIndex == i;
+          return GestureDetector(
+            onTap: () => onTap(i),
+            behavior: HitTestBehavior.opaque,
+            child: Icon(
+              _items[i],
+              color: isSelected ? theme.colorScheme.onSurface : theme.colorScheme.onSurfaceVariant.withValues(alpha: 0.4),
+              size: 28,
+            ),
+          );
+        }),
       ),
     );
   }
