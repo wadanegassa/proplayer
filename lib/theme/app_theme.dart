@@ -1,114 +1,119 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Neumorphic "Soft UI" — deep charcoal surfaces, 3D shadows, vibrant orange accents.
 abstract final class AppTheme {
-  // —— Neumorphic Colors ——————————————————————————————————————
-  static const Color background = Color(0xFF18191B);
-  static const Color lightShadow = Color(0xFF222327);
-  static const Color darkShadow = Color(0xFF0E0E10);
+  // —— Colors —————————————————————————————————————————————————
+  static const Color primary = Color(0xFFFBDD08); // Vibrant Yellow
+  static const Color backgroundLight = Color(0xFFF8F9FA);
+  static const Color backgroundDark = Color(0xFF121212);
+  static const Color surfaceLight = Colors.white;
+  static const Color surfaceDark = Color(0xFF1E1E1E);
   
-  static const Color brand = Color(0xFFFF5F2E); // Vibrant Orange
-  static const Color brandSecondary = Color(0xFFF53C11); // Deep Orange
+  static const Color textMainLight = Color(0xFF1A1A1A);
+  static const Color textSecondaryLight = Color(0xFF757575);
+  static const Color textMainDark = Colors.white;
+  static const Color textSecondaryDark = Colors.white70;
 
-  // —— Gradients —————————————————————————————————————————————
-  static const LinearGradient accentGradient = LinearGradient(
-    colors: [Color(0xFFFF5F2E), Color(0xFFF53C11)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
+  // —— Page backgrounds ———————————————————————————————————————
+  static const Color pageLight = backgroundLight;
+  static const Color pageDark = backgroundDark;
 
-  static const LinearGradient playingItemGradient = LinearGradient(
-    colors: [Color(0xFF222327), Color(0xFF18191B)],
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-  );
-
-  // —— Neumorphic Shadow Tokens ————————————————————————————————
-  static List<BoxShadow> elevated({double distance = 8, double blur = 16}) => [
-    BoxShadow(
-      color: lightShadow,
-      offset: Offset(-distance, -distance),
-      blurRadius: blur,
-    ),
-    BoxShadow(
-      color: darkShadow,
-      offset: Offset(distance, distance),
-      blurRadius: blur,
-    ),
-  ];
-
-  // Page backgrounds for AppShellBackground support
-  static const Color pageDark = background;
-  static const Color pageLight = Color(0xFFF0F0F3); // Soft white for light mode support if needed
-
-  // Helper for inner shadows since Flutter's BoxShadow doesn't natively support 'inset' 
-  // without a package or custom painter. We'll use custom containers for recessed looks.
-
-  static TextTheme _textTheme(TextTheme base, Color textColor) {
-    final t = GoogleFonts.interTextTheme(base);
+  static TextTheme _textTheme(TextTheme base, Color textColor, Color secondaryColor) {
+    final t = GoogleFonts.outfitTextTheme(base);
     return t.copyWith(
-      displaySmall: GoogleFonts.inter(
+      displayLarge: GoogleFonts.outfit(
+        textStyle: t.displayLarge,
+        fontWeight: FontWeight.w800,
+        color: textColor,
+      ),
+      displayMedium: GoogleFonts.outfit(
+        textStyle: t.displayMedium,
+        fontWeight: FontWeight.w800,
+        color: textColor,
+      ),
+      displaySmall: GoogleFonts.outfit(
         textStyle: t.displaySmall,
         fontWeight: FontWeight.w800,
-        letterSpacing: -1.0,
         color: textColor,
       ),
-      headlineMedium: GoogleFonts.inter(
+      headlineMedium: GoogleFonts.outfit(
         textStyle: t.headlineMedium,
         fontWeight: FontWeight.w700,
-        letterSpacing: -0.5,
         color: textColor,
       ),
-      titleLarge: GoogleFonts.inter(
+      titleLarge: GoogleFonts.outfit(
         textStyle: t.titleLarge,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.bold,
         color: textColor,
       ),
-      titleMedium: GoogleFonts.inter(
+      titleMedium: GoogleFonts.outfit(
         textStyle: t.titleMedium,
         fontWeight: FontWeight.w600,
         color: textColor,
       ),
-      bodyLarge: GoogleFonts.inter(
+      bodyLarge: GoogleFonts.outfit(
         textStyle: t.bodyLarge,
         fontWeight: FontWeight.w500,
         color: textColor,
       ),
-      bodyMedium: GoogleFonts.inter(
+      bodyMedium: GoogleFonts.outfit(
         textStyle: t.bodyMedium,
-        fontWeight: FontWeight.w500,
+        fontWeight: FontWeight.w400,
         color: textColor,
       ),
-      labelLarge: GoogleFonts.inter(
+      labelLarge: GoogleFonts.outfit(
         textStyle: t.labelLarge,
-        fontWeight: FontWeight.w700,
+        fontWeight: FontWeight.w600,
         color: textColor,
       ),
     );
   }
 
-  static final ThemeData darkTheme = ThemeData(
+  static ThemeData lightTheme = ThemeData(
+    useMaterial3: true,
+    brightness: Brightness.light,
+    scaffoldBackgroundColor: backgroundLight,
+    canvasColor: backgroundLight,
+    primaryColor: primary,
+    colorScheme: const ColorScheme.light(
+      primary: primary,
+      onPrimary: Colors.black,
+      surface: surfaceLight,
+      onSurface: textMainLight,
+      onSurfaceVariant: textSecondaryLight,
+    ),
+    textTheme: _textTheme(ThemeData.light().textTheme, textMainLight, textSecondaryLight),
+    iconTheme: const IconThemeData(color: textMainLight),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: backgroundLight,
+      elevation: 0,
+      centerTitle: true,
+      titleTextStyle: TextStyle(color: textMainLight, fontWeight: FontWeight.bold, fontSize: 18),
+      iconTheme: IconThemeData(color: textMainLight),
+    ),
+  );
+
+  static ThemeData darkTheme = ThemeData(
     useMaterial3: true,
     brightness: Brightness.dark,
-    scaffoldBackgroundColor: background,
-    canvasColor: background,
-    primaryColor: brand,
-    colorScheme: ColorScheme.dark(
-      primary: brand,
-      secondary: brandSecondary,
-      surface: background,
-      onSurface: Colors.white,
-      onSurfaceVariant: Colors.white70,
+    scaffoldBackgroundColor: backgroundDark,
+    canvasColor: backgroundDark,
+    primaryColor: primary,
+    colorScheme: const ColorScheme.dark(
+      primary: primary,
+      onPrimary: Colors.black,
+      surface: surfaceDark,
+      onSurface: textMainDark,
+      onSurfaceVariant: textSecondaryDark,
     ),
-    textTheme: _textTheme(ThemeData.dark().textTheme, Colors.white),
-    iconTheme: const IconThemeData(color: Colors.white70),
-    sliderTheme: SliderThemeData(
-      activeTrackColor: brand,
-      inactiveTrackColor: darkShadow,
-      thumbColor: brand,
-      overlayColor: brand.withValues(alpha: 0.2),
-      trackHeight: 4,
+    textTheme: _textTheme(ThemeData.dark().textTheme, textMainDark, textSecondaryDark),
+    iconTheme: const IconThemeData(color: textMainDark),
+    appBarTheme: const AppBarTheme(
+      backgroundColor: backgroundDark,
+      elevation: 0,
+      centerTitle: true,
+      titleTextStyle: TextStyle(color: textMainDark, fontWeight: FontWeight.bold, fontSize: 18),
+      iconTheme: IconThemeData(color: textMainDark),
     ),
   );
 }
