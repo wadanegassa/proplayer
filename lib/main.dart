@@ -50,7 +50,7 @@ class ProPlayer extends StatelessWidget {
         return MaterialApp(
           debugShowCheckedModeBanner: false,
           title: 'ProPlayer',
-          theme: AppTheme.darkTheme,
+          theme: AppTheme.lightTheme,
           darkTheme: AppTheme.darkTheme,
           themeMode: themeProvider.themeMode,
           home: const PermissionHandlerScreen(),
