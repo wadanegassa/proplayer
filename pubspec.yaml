@@ -43,6 +43,7 @@ dependencies:
   just_audio_background: ^0.0.1-beta.17
   video_player: ^2.9.2
   chewie: ^1.7.4
+  audio_video_progress_bar: ^2.0.3
 
   # UI / State
   provider: ^6.1.2
