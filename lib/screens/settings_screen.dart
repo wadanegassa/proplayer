@@ -3,7 +3,6 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:provider/provider.dart';
 import 'package:share_plus/share_plus.dart';
 import '../theme/app_theme.dart';
-import '../widgets/neumorphic_widgets.dart';
 import '../providers/home_provider.dart';
 import '../services/history_service.dart';
 
@@ -40,7 +39,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     final horizontalPadding = MediaQuery.sizeOf(context).width > 600 ? 32.0 : 20.0;
 
     return Scaffold(
-      backgroundColor: AppTheme.background,
+      backgroundColor: theme.scaffoldBackgroundColor,
       body: SafeArea(
         child: CustomScrollView(
           physics: const BouncingScrollPhysics(),
@@ -55,17 +54,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     Text(
                       'PREFERENCES',
                       style: theme.textTheme.labelSmall?.copyWith(
-                        color: AppTheme.brand,
+                        color: AppTheme.primary,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 4,
                       ),
                     ),
-                    const SizedBox(height: 4),
                     Text(
                       'Settings',
                       style: theme.textTheme.displaySmall?.copyWith(
                         fontSize: 32,
-                        fontWeight: FontWeight.w800,
+                        fontWeight: FontWeight.w900,
                       ),
                     ),
                   ],
@@ -80,10 +78,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 delegate: SliverChildListDelegate([
                   const SizedBox(height: 12),
                   _buildSectionHeader('Account & Data'),
-                  NeumorphicContainer(
+                  Container(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                         BoxShadow(color: Colors.black.withValues(alpha: theme.brightness == Brightness.dark ? 0.2 : 0.03), blurRadius: 10, offset: const Offset(0, 4)),
+                      ],
+                    ),
                     padding: const EdgeInsets.all(8),
-                    borderRadius: 24,
-                    depth: 8,
                     child: Column(
                       children: [
                         _SettingsTile(
@@ -102,10 +105,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   
                   const SizedBox(height: 32),
                   _buildSectionHeader('Support'),
-                  NeumorphicContainer(
+                  Container(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.surface,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                         BoxShadow(color: Colors.black.withValues(alpha: theme.brightness == Brightness.dark ? 0.2 : 0.03), blurRadius: 10, offset: const Offset(0, 4)),
+                      ],
+                    ),
                     padding: const EdgeInsets.all(8),
-                    borderRadius: 24,
-                    depth: 8,
                     child: Column(
                       children: [
                         _SettingsTile(
@@ -134,17 +142,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       children: [
                         Text(
                           'ProPlayer v$_appVersion',
-                          style: const TextStyle(color: Colors.white24, fontSize: 13, fontWeight: FontWeight.bold),
+                          style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.3), fontSize: 13, fontWeight: FontWeight.bold),
                         ),
                         const SizedBox(height: 4),
-                        const Text(
+                        Text(
                           'Made with ❤️ for Gospel Music',
-                          style: TextStyle(color: Colors.white10, fontSize: 11),
+                          style: TextStyle(color: theme.colorScheme.onSurface.withValues(alpha: 0.2), fontSize: 11),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 120),
+                  const SizedBox(height: 150),
                 ]),
               ),
             ),
@@ -158,8 +166,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     return Padding(
       padding: const EdgeInsets.only(left: 8, bottom: 12),
       child: Text(
-        title,
-        style: const TextStyle(color: Colors.white38, fontWeight: FontWeight.bold, fontSize: 13, letterSpacing: 1.2),
+        title.toUpperCase(),
+        style: const TextStyle(color: AppTheme.primary, fontWeight: FontWeight.w900, fontSize: 12, letterSpacing: 2),
       ),
     );
   }
@@ -168,8 +176,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: AppTheme.background,
-        title: const Text('Clear History'),
+        backgroundColor: Theme.of(context).colorScheme.surface,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+        title: const Text('Clear History', style: TextStyle(fontWeight: FontWeight.bold)),
         content: const Text('Are you sure you want to clear your recently played history?'),
         actions: [
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel')),
@@ -182,7 +191,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('History cleared')));
               }
             },
-            child: const Text('Clear', style: TextStyle(color: Colors.redAccent)),
+            child: const Text('Clear', style: TextStyle(color: Colors.redAccent, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -203,13 +212,13 @@ class _SettingsTile extends StatelessWidget {
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: AppTheme.darkShadow,
+          color: AppTheme.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(12),
         ),
-        child: Icon(icon, color: AppTheme.brand, size: 20),
+        child: Icon(icon, color: AppTheme.primary, size: 20),
       ),
       title: Text(title, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 15)),
-      trailing: const Icon(Icons.chevron_right_rounded, color: Colors.white24),
+      trailing: const Icon(Icons.chevron_right_rounded, size: 18),
     );
   }
 }
